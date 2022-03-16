@@ -1,15 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
 
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-    
+
     def __str__(self) -> str:
         return f'{self.username} - {self.email}'
+
 
 class Follow(models.Model):
     user = models.ForeignKey(
@@ -35,4 +37,4 @@ class Follow(models.Model):
                 name="unique_subscription")]
 
     def __str__(self) -> str:
-        return f'Пользователь {self.user} подписан(а) на {self.author}'
+        return f'Пользователь {self.user.username} подписан(а) на {self.author.username}'
