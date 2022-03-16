@@ -1,18 +1,20 @@
-from tabnanny import verbose
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from users.models import User
+from users.models import CustomUser
 
 
 class Recipe(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name='Автор')
-    name = models.CharField(max_length=64, blank=False, verbose_name='Рецепт')
+        CustomUser, on_delete=models.CASCADE,
+        verbose_name='Автор',
+        related_name='recipe')
+    name = models.CharField(max_length=64, verbose_name='Рецепт')
     image = models.ImageField(verbose_name='Фото')
     description = models.TextField(verbose_name='Описание рецепта')
     ingredients = models.ManyToManyField(
-        to='Ingredient', through='RecipeIngredients',
+        to='Ingredient',
+        through='RecipeIngredients',
         verbose_name='Ингредиенты')
     tag = models.ManyToManyField('Tag', verbose_name='Тэг')
     time = models.SmallIntegerField(
@@ -20,6 +22,10 @@ class Recipe(models.Model):
         validators=(
             MinValueValidator(
                 1, 'Выберите правильное время приготовления!'),))
+    favorite = models.ManyToManyField(
+        CustomUser, verbose_name='Избранные рецепт', related_name='favorite_recipes')
+    cart = models.ManyToManyField(
+        CustomUser, verbose_name='Корзина', related_name='shopping_cart')
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -34,8 +40,8 @@ class Ingredient(models.Model):
     units = models.CharField(max_length=12, verbose_name='Единицы измерения')
 
     class Meta:
-        verbose_name = 'Игредиент'
-        verbose_name_plural = 'Игредиенты'
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
 
     def __str__(self) -> str:
         return f'Игредицент {self.name} ({self.units})'
