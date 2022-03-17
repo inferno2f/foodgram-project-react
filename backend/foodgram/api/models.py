@@ -36,8 +36,8 @@ class Recipe(models.Model):
 
 
 class Ingredient(models.Model):
-    name = models.CharField(max_length=32, verbose_name='Ингридиент')
-    units = models.CharField(max_length=12, verbose_name='Единицы измерения')
+    name = models.CharField(max_length=200, verbose_name='Ингридиент')
+    units = models.CharField(max_length=200, verbose_name='Единицы измерения')
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -48,9 +48,9 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=16, verbose_name='Тэг')
-    color_code = models.CharField(max_length=8, verbose_name='HEX-код цвета')
-    slug = models.SlugField(unique=True, blank=False)
+    name = models.CharField(max_length=200, unique=True, verbose_name='Тэг')
+    color_code = models.CharField(max_length=7, unique=True, verbose_name='HEX-код цвета')
+    slug = models.SlugField(max_length=200, unique=True, blank=False)
 
     class Meta:
         verbose_name = 'Тэг'

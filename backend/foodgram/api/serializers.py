@@ -1,9 +1,14 @@
 from rest_framework import serializers
 
 from users.models import CustomUser
+from api.models import Tag
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for CustomUser model.
+    Reuqired fields: ['username', 'email', 'password', 'first_name', 'last_name']
+    """
     first_name = serializers.CharField(max_length=32, required=True)
     last_name = serializers.CharField(max_length=32, required=True)
     email = serializers.EmailField(required=True)
@@ -45,3 +50,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'last_name',
             'password',
         )
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
