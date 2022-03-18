@@ -6,8 +6,9 @@ from api import views
 
 
 router = routers.SimpleRouter()
-router.register(r'users', views.UserViewSet)
-router.register(r'tag', views.TagViewSet, basename='Tag')
+router.register('users', views.UserViewSet)
+router.register('tag', views.TagViewSet, basename='Tag')
+router.register('recipe', views.RecipeViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
+from api.models import Tag, Recipe
 from users.models import CustomUser
-from api.models import Tag
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -55,3 +55,15 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
+
+class RecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = (
+            'name',
+            # 'image',
+            'description',
+            'ingredients',
+            'tag',
+            'time'
+        )
