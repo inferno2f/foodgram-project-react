@@ -22,6 +22,7 @@ class Recipe(models.Model):
         validators=(
             MinValueValidator(
                 1, 'Выберите правильное время приготовления!'),))
+    # FIXME: протестировать работу корзины и избранных. Нэйминг может быть лучше
     favorite = models.ManyToManyField(
         CustomUser, verbose_name='Избранные рецепт', related_name='favorite_recipes')
     cart = models.ManyToManyField(

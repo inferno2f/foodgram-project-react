@@ -9,4 +9,4 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user.is_superuser or (
-            request.obj.username == request.user.username)
+            request.obj.author_id == request.user.id)
