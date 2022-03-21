@@ -59,6 +59,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     is_favorite = serializers.SerializerMethodField()
+    tag = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Recipe

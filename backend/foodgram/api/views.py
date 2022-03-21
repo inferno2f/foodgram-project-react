@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
@@ -7,9 +7,9 @@ from rest_framework.viewsets import ModelViewSet, ViewSet
 from api.models import Tag, Recipe
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
-        CreateUserSerializer,
-        TagSerializer,
-        RecipeSerializer
+    CreateUserSerializer,
+    TagSerializer,
+    RecipeSerializer
 )
 from users.models import CustomUser
 
@@ -20,11 +20,13 @@ class UserViewSet(ModelViewSet):
     serializer_class = CreateUserSerializer
     permission_classes = (permissions.AllowAny,)
 
+
 class TagViewSet(ViewSet):
     """
     Provides `GET` and `LIST` methods for all users.
     Tags can only be edited via admin panel.
     """
+
     def list(self, request):
         queryset = Tag.objects.all()
         serializer = TagSerializer(queryset, many=True)
@@ -36,24 +38,21 @@ class TagViewSet(ViewSet):
         serializer = TagSerializer(tag)
         return Response(serializer.data)
 
+
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = (IsAuthorOrReadOnly,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-    
-    @action(methods=('get', 'post'), detail=True)
-    def favorite(self, request, pk):
+
+    @action(methods=('get', 'delete'),
+            detail=True, permission_classes=(permissions.IsAuthenticated,))
+    def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=pk)
-        serializer = RecipeSerializer(recipe)
-        if serializer.is_valid():
-            if request.user not in recipe.favorite.all():
-                recipe.favorite.add(request.user)
-            elif request.user in recipe.favorite.all():
-                recipe.favorite.remove(request.user)
-            serializer.save()
-            return Response(serializer.data)
-    # FIXME: разобраться с PATCH реквестом. 'Request' object has no attribute 'obj'
+        if request.method == 'GET':
+            return Response(recipe.favorite.add(request.user), status.HTTP_202_ACCEPTED)
+        elif request.method == 'DELETE':
+            return Response(recipe.favorite.remove(request.user), status.HTTP_202_ACCEPTED)
+    # FIXME: добавить "укороченный" сериализатор рецепта и вывести serializer.data 

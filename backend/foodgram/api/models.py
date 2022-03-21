@@ -22,7 +22,6 @@ class Recipe(models.Model):
         validators=(
             MinValueValidator(
                 1, 'Выберите правильное время приготовления!'),))
-    # FIXME: протестировать работу корзины и избранных. Нэйминг может быть лучше
     favorite = models.ManyToManyField(
         CustomUser, verbose_name='В избранном', related_name='favorites',
         blank=True)
@@ -61,7 +60,7 @@ class Tag(models.Model):
         verbose_name_plural = 'Тэги'
 
     def __str__(self) -> str:
-        return f'Тэг {self.name} ({self.color_code})'
+        return f'{self.name}'
 
 
 class RecipeIngredients(models.Model):
