@@ -24,9 +24,11 @@ class Recipe(models.Model):
                 1, 'Выберите правильное время приготовления!'),))
     # FIXME: протестировать работу корзины и избранных. Нэйминг может быть лучше
     favorite = models.ManyToManyField(
-        CustomUser, verbose_name='Избранные рецепт', related_name='favorite_recipes')
+        CustomUser, verbose_name='В избранном', related_name='favorites',
+        blank=True)
     cart = models.ManyToManyField(
-        CustomUser, verbose_name='Корзина', related_name='shopping_cart')
+        CustomUser, verbose_name='В корзине', related_name='shopping_cart',
+        blank=True)
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -50,7 +52,8 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=200, unique=True, verbose_name='Тэг')
-    color_code = models.CharField(max_length=7, unique=True, verbose_name='HEX-код цвета')
+    color_code = models.CharField(
+        max_length=7, unique=True, verbose_name='HEX-код цвета')
     slug = models.SlugField(max_length=200, unique=True, blank=False)
 
     class Meta:

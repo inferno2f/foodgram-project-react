@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from api.models import Tag, Recipe
@@ -57,6 +58,8 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RecipeSerializer(serializers.ModelSerializer):
+    is_favorite = serializers.SerializerMethodField()
+
     class Meta:
         model = Recipe
         fields = (
@@ -66,5 +69,12 @@ class RecipeSerializer(serializers.ModelSerializer):
             'description',
             'ingredients',
             'tag',
-            'time'
+            'time',
+            'is_favorite',
         )
+    
+    def get_is_favorite(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return user.favorites.filter(id=obj.id).exists()
+        return False

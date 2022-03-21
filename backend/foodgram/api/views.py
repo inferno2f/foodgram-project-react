@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
 
@@ -44,4 +45,15 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
     
+    @action(methods=('get', 'post'), detail=True)
+    def favorite(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        serializer = RecipeSerializer(recipe)
+        if serializer.is_valid():
+            if request.user not in recipe.favorite.all():
+                recipe.favorite.add(request.user)
+            elif request.user in recipe.favorite.all():
+                recipe.favorite.remove(request.user)
+            serializer.save()
+            return Response(serializer.data)
     # FIXME: разобраться с PATCH реквестом. 'Request' object has no attribute 'obj'
