@@ -20,6 +20,13 @@ class UserViewSet(ModelViewSet):
     serializer_class = CreateUserSerializer
     permission_classes = (permissions.AllowAny,)
 
+    @action(methods=('get',), detail=False, permission_classes=(permissions.IsAuthenticated,))
+    def me(self, request, *args, **kwargs):
+        user = get_object_or_404(CustomUser, id=request.user.id)
+        if request.method == 'GET':
+            serializer = CreateUserSerializer(user, many=False)
+            return Response(serializer.data)
+
 
 class TagViewSet(ViewSet):
     """
@@ -52,7 +59,11 @@ class RecipeViewSet(ModelViewSet):
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'GET':
-            return Response(recipe.favorite.add(request.user), status.HTTP_202_ACCEPTED)
+            return Response(
+                recipe.favorite.add(request.user),
+                status.HTTP_202_ACCEPTED)
         elif request.method == 'DELETE':
-            return Response(recipe.favorite.remove(request.user), status.HTTP_202_ACCEPTED)
-    # FIXME: добавить "укороченный" сериализатор рецепта и вывести serializer.data 
+            return Response(
+                recipe.favorite.remove(request.user),
+                status.HTTP_202_ACCEPTED)
+    # FIXME: добавить "укороченный" сериализатор рецепта и вывести serializer.data
