@@ -27,13 +27,15 @@ class UserViewSet(ModelViewSet):
         return GetUserSerializer
 
     @action(methods=('get',), detail=False, permission_classes=(permissions.IsAuthenticated,))
-    def me(self, request, *args, **kwargs):
+    def me(self, request):
+        """ Quick access to user's peronal profile via /me endpoint """
         user = get_object_or_404(CustomUser, id=request.user.id)
         serializer = CreateUserSerializer(user, many=False)
         return Response(serializer.data)
     
     @action(methods=('post',), detail=False, permission_classes=(permissions.IsAuthenticated,))
     def set_password(self, request):
+        """ Provides a way to change a password """
         user = get_object_or_404(CustomUser, id=request.user.id)
         serializer = ChangePasswordSerializer(data=request.data)
 
