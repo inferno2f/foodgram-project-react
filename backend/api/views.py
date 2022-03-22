@@ -38,8 +38,8 @@ class UserViewSet(ModelViewSet):
         serializer = ChangePasswordSerializer(data=request.data)
 
         if serializer.is_valid():
-            old_password = serializer.data.get('old_password')
-            if not user.check_password(old_password):
+            current_password = serializer.data.get('current_password')
+            if not user.check_password(current_password):
                 return Response({'old_password': ['Wrong password.']}, 
                                 status=status.HTTP_400_BAD_REQUEST)
             user.set_password(serializer.data.get('new_password'))
