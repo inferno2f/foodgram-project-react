@@ -8,6 +8,7 @@ from api.models import Tag, Recipe
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CreateUserSerializer,
+    ChangePasswordSerializer,
     GetUserSerializer,
     TagSerializer,
     RecipeSerializer
@@ -18,7 +19,6 @@ from users.models import CustomUser
 class UserViewSet(ModelViewSet):
     """Viewset for all user-related opertations. Uses djoser endpoints"""
     queryset = CustomUser.objects.all()
-    # serializer_class = CreateUserSerializer
     permission_classes = (permissions.AllowAny,)
 
     def get_serializer_class(self):
@@ -31,7 +31,22 @@ class UserViewSet(ModelViewSet):
         user = get_object_or_404(CustomUser, id=request.user.id)
         serializer = CreateUserSerializer(user, many=False)
         return Response(serializer.data)
-    # TODO: добавить сериализатор для просмотра информации
+    
+    @action(methods=('post',), detail=False, permission_classes=(permissions.IsAuthenticated,))
+    def set_password(self, request):
+        user = get_object_or_404(CustomUser, id=request.user.id)
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            old_password = serializer.data.get('old_password')
+            if not user.check_password(old_password):
+                return Response({'old_password': ['Wrong password.']}, 
+                                status=status.HTTP_400_BAD_REQUEST)
+            user.set_password(serializer.data.get('new_password'))
+            user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(ViewSet):

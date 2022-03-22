@@ -1,5 +1,4 @@
 from django.contrib.auth import password_validation
-from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
 from api.models import Tag, Recipe
@@ -59,7 +58,20 @@ class CreateUserSerializer(serializers.ModelSerializer):
         )
 
 
+class ChangePasswordSerializer(serializers.Serializer):
+    """
+    Serializer for password change endpoint.
+    """
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_new_password(self, value):
+        password_validation.validate_password(value)
+        return value
+
+
 class GetUserSerializer(serializers.ModelSerializer):
+    """ Serializer for a 'GET' method of a UserViewSet """
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -72,7 +84,7 @@ class GetUserSerializer(serializers.ModelSerializer):
             'last_name',
             'is_subscribed'
         )
-    
+
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
