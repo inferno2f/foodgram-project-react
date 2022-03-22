@@ -23,9 +23,8 @@ class UserViewSet(ModelViewSet):
     @action(methods=('get',), detail=False, permission_classes=(permissions.IsAuthenticated,))
     def me(self, request, *args, **kwargs):
         user = get_object_or_404(CustomUser, id=request.user.id)
-        if request.method == 'GET':
-            serializer = CreateUserSerializer(user, many=False)
-            return Response(serializer.data)
+        serializer = CreateUserSerializer(user, many=False)
+        return Response(serializer.data)
     # TODO: добавить сериализатор для просмотра информации
 
 

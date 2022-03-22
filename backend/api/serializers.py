@@ -1,4 +1,5 @@
-from django.shortcuts import get_object_or_404
+from django.contrib.auth import password_validation
+from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
 from api.models import Tag, Recipe
@@ -10,9 +11,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
     Serializer for CustomUser model.
     Reuqired fields: ['username', 'email', 'password', 'first_name', 'last_name']
     """
-    first_name = serializers.CharField(max_length=32, required=True)
-    last_name = serializers.CharField(max_length=32, required=True)
+    first_name = serializers.CharField(max_length=150, required=True)
+    last_name = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(required=True)
+    password = serializers.CharField(max_length=150, required=True)
     # TODO: is_subscribed = serializers.SerializerMethodField()
 
     def validate_email(self, value):
@@ -24,12 +26,17 @@ class CreateUserSerializer(serializers.ModelSerializer):
         return lower_email
 
     def validate_username(self, value):
-        """ Assures that username is not equal to 'me' """
+        """ Assures that username is not taken or equal to 'me' """
         lower_username = value.lower()
-        if lower_username == 'me':
+        if lower_username == 'me' or CustomUser.objects.filter(
+                username=lower_username).exists():
             raise serializers.ValidationError(
                 'Please use a different username')
         return lower_username
+
+    def validate_password(self, value):
+        password_validation.validate_password(value, self.instance)
+        return value
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
@@ -37,9 +44,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
+            password=validated_data['password']
         )
-        user.set_password(validated_data['password'])
-        user.save()
         return user
 
     class Meta:
