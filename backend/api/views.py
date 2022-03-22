@@ -26,6 +26,7 @@ class UserViewSet(ModelViewSet):
         if request.method == 'GET':
             serializer = CreateUserSerializer(user, many=False)
             return Response(serializer.data)
+    # TODO: добавить сериализатор для просмотра информации
 
 
 class TagViewSet(ViewSet):

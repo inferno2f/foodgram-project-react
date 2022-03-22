@@ -13,6 +13,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=32, required=True)
     last_name = serializers.CharField(max_length=32, required=True)
     email = serializers.EmailField(required=True)
+    # TODO: is_subscribed = serializers.SerializerMethodField()
 
     def validate_email(self, value):
         """Checks if the email is already in the database"""
@@ -52,10 +53,12 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'password',
         )
 
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
+
 
 class RecipeSerializer(serializers.ModelSerializer):
     is_favorite = serializers.SerializerMethodField()
@@ -73,7 +76,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             'time',
             'is_favorite',
         )
-    
+
     def get_is_favorite(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
