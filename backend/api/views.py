@@ -8,6 +8,7 @@ from api.models import Tag, Recipe
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CreateUserSerializer,
+    GetUserSerializer,
     TagSerializer,
     RecipeSerializer
 )
@@ -17,8 +18,13 @@ from users.models import CustomUser
 class UserViewSet(ModelViewSet):
     """Viewset for all user-related opertations. Uses djoser endpoints"""
     queryset = CustomUser.objects.all()
-    serializer_class = CreateUserSerializer
+    # serializer_class = CreateUserSerializer
     permission_classes = (permissions.AllowAny,)
+
+    def get_serializer_class(self):
+        if self.action == 'post':
+            return CreateUserSerializer
+        return GetUserSerializer
 
     @action(methods=('get',), detail=False, permission_classes=(permissions.IsAuthenticated,))
     def me(self, request, *args, **kwargs):

@@ -3,7 +3,7 @@ from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
 from api.models import Tag, Recipe
-from users.models import CustomUser
+from users.models import CustomUser, Follow
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -15,7 +15,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(required=True)
     password = serializers.CharField(max_length=150, required=True)
-    # TODO: is_subscribed = serializers.SerializerMethodField()
 
     def validate_email(self, value):
         """Checks if the email is already in the database"""
@@ -58,6 +57,27 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'last_name',
             'password',
         )
+
+
+class GetUserSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed'
+        )
+    
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return Follow.objects.filter(id=obj.id).exists()
+        return False
 
 
 class TagSerializer(serializers.ModelSerializer):
