@@ -120,3 +120,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         if user.is_authenticated:
             return user.favorites.filter(id=obj.id).exists()
         return False
+
+class FavoriteRecipeSerializer(serializers.ModelSerializer):
+    """ Shortened serializer to view favorite recipes """
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'time')

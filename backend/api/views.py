@@ -9,6 +9,7 @@ from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CreateUserSerializer,
     ChangePasswordSerializer,
+    FavoriteRecipeSerializer,
     GetUserSerializer,
     TagSerializer,
     RecipeSerializer
@@ -26,14 +27,16 @@ class UserViewSet(ModelViewSet):
             return CreateUserSerializer
         return GetUserSerializer
 
-    @action(methods=('get',), detail=False, permission_classes=(permissions.IsAuthenticated,))
+    @action(methods=('get',),
+            detail=False, permission_classes=(permissions.IsAuthenticated,))
     def me(self, request):
         """ Quick access to user's peronal profile via /me endpoint """
         user = get_object_or_404(CustomUser, id=request.user.id)
         serializer = CreateUserSerializer(user, many=False)
         return Response(serializer.data)
-    
-    @action(methods=('post',), detail=False, permission_classes=(permissions.IsAuthenticated,))
+
+    @action(methods=('post',),
+            detail=False, permission_classes=(permissions.IsAuthenticated,))
     def set_password(self, request):
         """ Provides a way to change a password """
         user = get_object_or_404(CustomUser, id=request.user.id)
@@ -42,7 +45,7 @@ class UserViewSet(ModelViewSet):
         if serializer.is_valid():
             current_password = serializer.data.get('current_password')
             if not user.check_password(current_password):
-                return Response({'old_password': ['Wrong password.']}, 
+                return Response({'old_password': ['Wrong password.']},
                                 status=status.HTTP_400_BAD_REQUEST)
             user.set_password(serializer.data.get('new_password'))
             user.save()
@@ -77,16 +80,15 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(methods=('get', 'delete'),
-            detail=True, permission_classes=(permissions.IsAuthenticated,))
+    @action(methods=('get', 'delete'), detail=True,
+            permission_classes=(permissions.IsAuthenticated,))
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=pk)
+        serializer = FavoriteRecipeSerializer(recipe)
+
         if request.method == 'GET':
-            return Response(
-                recipe.favorite.add(request.user),
-                status.HTTP_202_ACCEPTED)
+            recipe.favorite.add(request.user)
+            return Response(serializer.data, status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
-            return Response(
-                recipe.favorite.remove(request.user),
-                status.HTTP_202_ACCEPTED)
-    # FIXME: добавить "укороченный" сериализатор рецепта и вывести serializer.data
+            recipe.favorite.remove(request.user),
+            return Response(status.HTTP_204_NO_CONTENT)
