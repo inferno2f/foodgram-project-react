@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
 from rest_framework.decorators import action
@@ -90,6 +91,24 @@ class RecipeViewSet(ModelViewSet):
         elif request.method == 'DELETE':
             recipe.cart.remove(request.user),
             return Response(status.HTTP_204_NO_CONTENT)
+
+    @action(methods=('get',), permission_classes=(permissions.IsAuthenticated,), detail=False)
+    def download_shopping_cart(self, request):
+        """ Download list of all ingredients for recipes in shopping cart """
+        ingredients = CustomUser.objects.filter(id=request.user.id).values(
+            'shopping_cart__ingredients__name',
+            'shopping_cart__ingredients__units',
+        ).annotate(
+            total=Sum('shopping_cart__recipeingredients__amount'),
+        ).order_by('shopping_cart__ingredients__name')
+
+        # TODO: сделать выгрузку в текстовый файл, разобраться с null в случае пустого списка
+
+        # for k, v, a in ingredients.values():
+        #     print(k.value, a, v)
+        # print(ingredients.values())
+
+        return Response(ingredients)
 
 
 class TagViewSet(ViewSet):

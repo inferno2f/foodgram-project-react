@@ -121,7 +121,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
     tags = TagSerializer(read_only=True, many=True)
     ingredients = RecipeIngredientsSerializer(
-        source='recipeingredients_set', read_only=True, many=True)
+        source='recipeingredients_set', many=True)
 
     class Meta:
         model = Recipe

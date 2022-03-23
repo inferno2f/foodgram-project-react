@@ -16,7 +16,11 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
 
+class RecipeIngredientAdmin(admin.ModelAdmin):
+    list_display = ('recipe', 'ingredient')
+    list_filter = ('recipe__author',)
+
 admin.site.register(models.Recipe, RecipeAdmin)
 admin.site.register(models.Ingredient, IngredientAdmin)
 admin.site.register(models.Tag)
-admin.site.register(models.RecipeIngredients)
+admin.site.register(models.RecipeIngredients, RecipeIngredientAdmin)
