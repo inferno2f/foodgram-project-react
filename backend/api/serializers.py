@@ -1,7 +1,7 @@
 from django.contrib.auth import password_validation
 from rest_framework import serializers
 
-from api.models import Tag, Recipe
+from api.models import Tag, Recipe, Ingredient
 from users.models import CustomUser, Follow
 
 
@@ -99,7 +99,8 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    is_favorite = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
     tag = serializers.StringRelatedField(many=True)
 
     class Meta:
@@ -112,17 +113,31 @@ class RecipeSerializer(serializers.ModelSerializer):
             'ingredients',
             'tag',
             'time',
-            'is_favorite',
+            'is_favorited',
+            'is_in_shopping_cart'
         )
 
-    def get_is_favorite(self, obj):
+    def get_is_favorited(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
             return user.favorites.filter(id=obj.id).exists()
         return False
+    
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return user.shopping_cart.filter(id=obj.id).exists()
+        return False
+
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
     """ Shortened serializer to view favorite recipes """
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'time')
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = '__all__'

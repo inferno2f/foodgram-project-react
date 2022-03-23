@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
 
-from api.models import Tag, Recipe
+from api.models import Tag, Recipe, Ingredient
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CreateUserSerializer,
@@ -12,7 +12,8 @@ from api.serializers import (
     FavoriteRecipeSerializer,
     GetUserSerializer,
     TagSerializer,
-    RecipeSerializer
+    RecipeSerializer,
+    IngredientSerializer
 )
 from users.models import CustomUser
 
@@ -54,10 +55,47 @@ class UserViewSet(ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class RecipeViewSet(ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    permission_classes = (IsAuthorOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    @action(methods=('get', 'delete'), detail=True,
+            permission_classes=(permissions.IsAuthenticated,))
+    def favorite(self, request, pk=None):
+        """ Add recipe to favorites """
+        recipe = get_object_or_404(Recipe, id=pk)
+        serializer = FavoriteRecipeSerializer(recipe)
+
+        if request.method == 'GET':
+            recipe.favorite.add(request.user)
+            return Response(serializer.data, status.HTTP_201_CREATED)
+        elif request.method == 'DELETE':
+            recipe.favorite.remove(request.user),
+            return Response(status.HTTP_204_NO_CONTENT)
+
+    @action(methods=('get', 'delete'), detail=True,
+            permission_classes=(permissions.IsAuthenticated,))
+    def shopping_cart(self, request, pk=None):
+        """ Add recipe to shopping cart """
+        recipe = get_object_or_404(Recipe, id=pk)
+        serializer = FavoriteRecipeSerializer(recipe)
+
+        if request.method == 'GET':
+            recipe.cart.add(request.user)
+            return Response(serializer.data, status.HTTP_201_CREATED)
+        elif request.method == 'DELETE':
+            recipe.cart.remove(request.user),
+            return Response(status.HTTP_204_NO_CONTENT)
+
+
 class TagViewSet(ViewSet):
     """
     Provides `GET` and `LIST` methods for all users.
-    Tags can only be edited via admin panel.
+    Tags can only be added and edited via admin panel.
     """
 
     def list(self, request):
@@ -72,23 +110,19 @@ class TagViewSet(ViewSet):
         return Response(serializer.data)
 
 
-class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-    permission_classes = (IsAuthorOrReadOnly,)
+class IngredientViewSet(ViewSet):
+    """
+    Provides `GET` and `LIST` methods for all users.
+    Ingredients can only be added and edited via admin panel.
+    """
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
- 
-    @action(methods=('get', 'delete'), detail=True,
-            permission_classes=(permissions.IsAuthenticated,))
-    def favorite(self, request, pk=None):
-        recipe = get_object_or_404(Recipe, id=pk)
-        serializer = FavoriteRecipeSerializer(recipe)
+    def list(self, request):
+        queryset = Ingredient.objects.all()
+        serializer = IngredientSerializer(queryset, many=True)
+        return Response(serializer.data)
 
-        if request.method == 'GET':
-            recipe.favorite.add(request.user)
-            return Response(serializer.data, status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            recipe.favorite.remove(request.user),
-            return Response(status.HTTP_204_NO_CONTENT)
+    def retrieve(self, request, pk=None):
+        queryset = Tag.objects.all()
+        ingredient = get_object_or_404(queryset, pk=pk)
+        serializer = IngredientSerializer(ingredient)
+        return Response(serializer.data)
