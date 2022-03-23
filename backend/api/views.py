@@ -4,17 +4,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
 
-from api.models import Tag, Recipe, Ingredient
+from api.models import Ingredient, Recipe, Tag
 from api.permissions import IsAuthorOrReadOnly
-from api.serializers import (
-    CreateUserSerializer,
-    ChangePasswordSerializer,
-    FavoriteRecipeSerializer,
-    GetUserSerializer,
-    TagSerializer,
-    RecipeSerializer,
-    IngredientSerializer
-)
+from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
+                             FavoriteRecipeSerializer, GetUserSerializer,
+                             IngredientSerializer, RecipeSerializer,
+                             TagSerializer)
 from users.models import CustomUser
 
 

@@ -1,7 +1,7 @@
 from django.contrib.auth import password_validation
 from rest_framework import serializers
 
-from api.models import Tag, Recipe, Ingredient
+from api.models import Tag, Recipe, Ingredient, RecipeIngredients
 from users.models import CustomUser, Follow
 
 
@@ -98,20 +98,41 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = '__all__'
+
+
+class RecipeIngredientsSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement = serializers.ReadOnlyField(source='ingredient.units')
+    amount = serializers.ReadOnlyField()
+
+    class Meta:
+        model = RecipeIngredients
+        fields = ('id', 'name', 'measurement', 'amount')
+
+
 class RecipeSerializer(serializers.ModelSerializer):
+    author = GetUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    tag = serializers.StringRelatedField(many=True)
+    tags = TagSerializer(read_only=True, many=True)
+    ingredients = RecipeIngredientsSerializer(
+        source='recipeingredients_set', read_only=True, many=True)
 
     class Meta:
         model = Recipe
         fields = (
             'id',
+            'author',
             'name',
             # 'image',
             'description',
             'ingredients',
-            'tag',
+            'tags',
             'time',
             'is_favorited',
             'is_in_shopping_cart'
@@ -122,7 +143,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         if user.is_authenticated:
             return user.favorites.filter(id=obj.id).exists()
         return False
-    
+
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
@@ -135,9 +156,3 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'time')
-
-
-class IngredientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ingredient
-        fields = '__all__'
