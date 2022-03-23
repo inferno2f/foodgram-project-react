@@ -23,7 +23,7 @@ class UserViewSet(ModelViewSet):
     permission_classes = (permissions.AllowAny,)
 
     def get_serializer_class(self):
-        if self.action == 'post':
+        if self.request.method == 'POST':
             return CreateUserSerializer
         return GetUserSerializer
 
