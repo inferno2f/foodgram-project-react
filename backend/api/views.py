@@ -1,6 +1,14 @@
-from django_filters.rest_framework import DjangoFilterBackend
+import io
+
 from django.db.models import Sum
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
@@ -92,23 +100,40 @@ class RecipeViewSet(ModelViewSet):
             recipe.cart.remove(request.user),
             return Response(status.HTTP_204_NO_CONTENT)
 
-    @action(methods=('get',), permission_classes=(permissions.IsAuthenticated,), detail=False)
+    @action(methods=('get',),
+            permission_classes=(permissions.IsAuthenticated,),
+            detail=False)
     def download_shopping_cart(self, request):
         """ Download list of all ingredients for recipes in shopping cart """
         ingredients = CustomUser.objects.filter(id=request.user.id).values(
             'shopping_cart__ingredients__name',
             'shopping_cart__ingredients__units',
-        ).annotate(
+        ).exclude(shopping_cart__ingredients__name__isnull=True).annotate(
             total=Sum('shopping_cart__recipeingredients__amount'),
         ).order_by('shopping_cart__ingredients__name')
 
-        # TODO: сделать выгрузку в текстовый файл, разобраться с null в случае пустого списка
+        # Adding font supporting cyrillic alphabet
+        pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
+        # Generating PDF file with reportlab
+        buf = io.BytesIO()
+        page = canvas.Canvas(buf, pagesize=A4, bottomup=0)
+        text_obj = page.beginText()
+        text_obj.setTextOrigin(inch, inch)
+        text_obj.setFont('DejaVuSans', 14)
+        text_obj.setLeading(leading=25)
+        text_obj.textLine(f'Список покупок {request.user.username}:')
+        ingredient_num = 0
+        for i in ingredients:
+            ingredient_num += 1
+            text_obj.textLine(f'{ingredient_num}. ' + ' '.join(str(i) for i in i.values()))
 
-        # for k, v, a in ingredients.values():
-        #     print(k.value, a, v)
-        # print(ingredients.values())
+        page.drawText(text_obj)
+        page.showPage()
+        page.save()
+        buf.seek(0)
 
-        return Response(ingredients)
+        return FileResponse(buf, as_attachment=True,
+                            filename='Foodgram_cart.pdf')
 
 
 class TagViewSet(ViewSet):
