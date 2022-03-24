@@ -88,7 +88,7 @@ class GetUserSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
-            return Follow.objects.filter(id=obj.id).exists()
+            return Follow.objects.filter(user=user, author=obj).exists()
         return False
 
 
@@ -156,3 +156,11 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'time')
+
+
+class UserSubscribtionSerializer(serializers.ModelSerializer):
+    # recipes = FavoriteRecipeSerializer(source='recipe_set', many=True)
+
+    class Meta:
+        model = Follow
+        fields = '__all__'

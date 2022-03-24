@@ -16,18 +16,19 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
 
 from api.models import Ingredient, Recipe, Tag
-from api.permissions import IsAuthorOrReadOnly
+from api.paginators import DefaultPaginator
+from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
                              FavoriteRecipeSerializer, GetUserSerializer,
                              IngredientSerializer, RecipeSerializer,
-                             TagSerializer)
-from users.models import CustomUser
+                             TagSerializer, UserSubscribtionSerializer)
+from users.models import CustomUser, Follow
 
 
 class UserViewSet(ModelViewSet):
     """Viewset for all user-related opertations. Uses djoser endpoints"""
     queryset = CustomUser.objects.all()
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsUserOrReadOnly,)
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -35,7 +36,7 @@ class UserViewSet(ModelViewSet):
         return GetUserSerializer
 
     @action(methods=('get',),
-            detail=False, permission_classes=(permissions.IsAuthenticated,))
+            detail=False, permission_classes=(IsUserOrReadOnly,))
     def me(self, request):
         """ Quick access to user's peronal profile via /me endpoint """
         user = get_object_or_404(CustomUser, id=request.user.id)
@@ -43,7 +44,7 @@ class UserViewSet(ModelViewSet):
         return Response(serializer.data)
 
     @action(methods=('post',),
-            detail=False, permission_classes=(permissions.IsAuthenticated,))
+            detail=False, permission_classes=(IsUserOrReadOnly,))
     def set_password(self, request):
         """ Provides a way to change a password """
         user = get_object_or_404(CustomUser, id=request.user.id)
@@ -60,6 +61,32 @@ class UserViewSet(ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(methods=('get', 'delete'),
+            detail=True, permission_classes=(IsUserOrReadOnly,))
+    def subscribe(self, request, pk):
+        author = get_object_or_404(CustomUser, id=pk)
+        user = request.user
+        serializer = UserSubscribtionSerializer(data=request.data)
+        follow = Follow.objects.filter(user=user, author=author)
+
+        # FIXME: разобраться с сериализаторами
+        if request.method == 'GET':
+            serializer = UserSubscribtionSerializer(follow)
+            if not follow:
+                serializer = UserSubscribtionSerializer(
+                    Follow.objects.create(user=user, author=author))
+                serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status.HTTP_200_OK)
+        elif request.method == 'DELETE':
+            if follow:
+                Follow.objects.filter(user=user, author=author).delete()
+                return Response(
+                    {'detail': 'success'},
+                    status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'detail': 'subscription doesn\'t exist'},
+                status.HTTP_204_NO_CONTENT)
+
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
@@ -72,7 +99,7 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(methods=('get', 'delete'), detail=True,
+    @ action(methods=('get', 'delete'), detail=True,
             permission_classes=(permissions.IsAuthenticated,))
     def favorite(self, request, pk=None):
         """ Add recipe to favorites """
@@ -86,7 +113,7 @@ class RecipeViewSet(ModelViewSet):
             recipe.favorite.remove(request.user),
             return Response(status.HTTP_204_NO_CONTENT)
 
-    @action(methods=('get', 'delete'), detail=True,
+    @ action(methods=('get', 'delete'), detail=True,
             permission_classes=(permissions.IsAuthenticated,))
     def shopping_cart(self, request, pk=None):
         """ Add recipe to shopping cart """
@@ -100,7 +127,7 @@ class RecipeViewSet(ModelViewSet):
             recipe.cart.remove(request.user),
             return Response(status.HTTP_204_NO_CONTENT)
 
-    @action(methods=('get',),
+    @ action(methods=('get',),
             permission_classes=(permissions.IsAuthenticated,),
             detail=False)
     def download_shopping_cart(self, request):
@@ -125,7 +152,8 @@ class RecipeViewSet(ModelViewSet):
         ingredient_num = 0
         for i in ingredients:
             ingredient_num += 1
-            text_obj.textLine(f'{ingredient_num}. ' + ' '.join(str(i) for i in i.values()))
+            text_obj.textLine(
+                f'{ingredient_num}. ' + ' '.join(str(i) for i in i.values()))
 
         page.drawText(text_obj)
         page.showPage()
@@ -162,11 +190,13 @@ class IngredientViewSet(ViewSet):
 
     def list(self, request):
         queryset = Ingredient.objects.all()
-        serializer = IngredientSerializer(queryset, many=True)
-        return Response(serializer.data)
+        paginator = DefaultPaginator()
+        result_page = paginator.paginate_queryset(queryset, request)
+        serializer = IngredientSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def retrieve(self, request, pk=None):
-        queryset = Tag.objects.all()
-        ingredient = get_object_or_404(queryset, pk=pk)
-        serializer = IngredientSerializer(ingredient)
+        queryset = Tag.objects.filter(id=pk)
+        # ingredient = get_object_or_404(queryset, pk=pk)
+        serializer = IngredientSerializer(queryset)
         return Response(serializer.data)
