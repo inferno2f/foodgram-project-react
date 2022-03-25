@@ -159,7 +159,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribtionSerializer(serializers.ModelSerializer):
-    # recipes = FavoriteRecipeSerializer(source='recipe_set', many=True)
+    recipes = FavoriteRecipeSerializer(source='recipe_set', many=True)
 
     class Meta:
         model = Follow
