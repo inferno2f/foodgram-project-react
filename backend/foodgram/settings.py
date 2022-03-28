@@ -14,7 +14,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Custom User model
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -46,7 +46,9 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
-   "USER_ID_FIELD": "username"
+   'USER_ID_FIELD': 'username',
+   'LOGIN_FIELD': 'email',
+   'SEND_ACTIVATION_EMAIL': False,
 }
 
 MIDDLEWARE = [
