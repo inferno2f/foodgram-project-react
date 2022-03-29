@@ -16,7 +16,7 @@ class Recipe(models.Model):
         to='Ingredient',
         through='RecipeIngredients',
         verbose_name='Ингредиенты')
-    tag = models.ManyToManyField('Tag', verbose_name='Тэг')
+    tag = models.ManyToManyField('Tag', verbose_name='Тэг', default=None, blank=True)
     time = models.SmallIntegerField(
         verbose_name='Время приготовления (мин)',
         validators=(

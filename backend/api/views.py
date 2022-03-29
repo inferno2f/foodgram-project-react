@@ -61,7 +61,7 @@ class UserViewSet(ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=('get', 'delete'),
+    @action(methods=('post', 'delete'),
             detail=True, permission_classes=(IsUserOrReadOnly,))
     def subscribe(self, request, pk):
         author = get_object_or_404(CustomUser, id=pk)
@@ -69,14 +69,17 @@ class UserViewSet(ModelViewSet):
         serializer = UserSubscribtionSerializer(data=request.data)
         follow = Follow.objects.filter(user=user, author=author)
 
-        # FIXME: разобраться с сериализаторами
-        if request.method == 'GET':
+        # FIXME: разобраться с сериализаторами - свериться с данными в документации
+        if request.method == 'POST':
             serializer = UserSubscribtionSerializer(follow)
             if not follow:
                 serializer = UserSubscribtionSerializer(
                     Follow.objects.create(user=user, author=author))
                 serializer.is_valid(raise_exception=True)
-            return Response(serializer.data, status.HTTP_200_OK)
+                serializer.save()
+            return Response(
+                {'detail': 'subscription created'},
+                status.HTTP_200_OK)
         elif request.method == 'DELETE':
             if follow:
                 Follow.objects.filter(user=user, author=author).delete()
@@ -99,35 +102,35 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @ action(methods=('get', 'delete'), detail=True,
+    @action(methods=('post', 'delete'), detail=True,
             permission_classes=(permissions.IsAuthenticated,))
     def favorite(self, request, pk=None):
         """ Add recipe to favorites """
         recipe = get_object_or_404(Recipe, id=pk)
         serializer = FavoriteRecipeSerializer(recipe)
 
-        if request.method == 'GET':
+        if request.method == 'POST':
             recipe.favorite.add(request.user)
             return Response(serializer.data, status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
             recipe.favorite.remove(request.user),
             return Response(status.HTTP_204_NO_CONTENT)
 
-    @ action(methods=('get', 'delete'), detail=True,
+    @action(methods=('post', 'delete'), detail=True,
             permission_classes=(permissions.IsAuthenticated,))
     def shopping_cart(self, request, pk=None):
         """ Add recipe to shopping cart """
         recipe = get_object_or_404(Recipe, id=pk)
         serializer = FavoriteRecipeSerializer(recipe)
 
-        if request.method == 'GET':
+        if request.method == 'POST':
             recipe.cart.add(request.user)
             return Response(serializer.data, status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
             recipe.cart.remove(request.user),
             return Response(status.HTTP_204_NO_CONTENT)
 
-    @ action(methods=('get',),
+    @action(methods=('get',),
             permission_classes=(permissions.IsAuthenticated,),
             detail=False)
     def download_shopping_cart(self, request):
