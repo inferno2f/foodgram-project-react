@@ -18,5 +18,5 @@ def run():
             pass
         else:
             # Specify model and query details here
-            Ingredient.objects.create(name=ingredient[0], units=ingredient[1])
+            Ingredient.objects.create(name=ingredient[0], measurement_unit=ingredient[1])
         count += 1

@@ -16,8 +16,8 @@ class Recipe(models.Model):
         to='Ingredient',
         through='RecipeIngredients',
         verbose_name='Ингредиенты')
-    tag = models.ManyToManyField('Tag', verbose_name='Тэг', default=None, blank=True)
-    time = models.SmallIntegerField(
+    tags = models.ManyToManyField('Tag', verbose_name='Тэг', default=None, blank=True)
+    cooking_time = models.SmallIntegerField(
         verbose_name='Время приготовления (мин)',
         validators=(
             MinValueValidator(
@@ -39,7 +39,7 @@ class Recipe(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=200, verbose_name='Ингридиент')
-    units = models.CharField(max_length=200, verbose_name='Единицы измерения')
+    measurement_unit = models.CharField(max_length=200, verbose_name='Единицы измерения')
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -51,7 +51,7 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=200, unique=True, verbose_name='Тэг')
-    color_code = models.CharField(
+    color = models.CharField(
         max_length=7, unique=True, verbose_name='HEX-код цвета')
     slug = models.SlugField(max_length=200, unique=True, blank=False)
 

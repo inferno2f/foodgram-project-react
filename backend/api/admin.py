@@ -8,7 +8,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorite.count()
 
     list_display = ('name', 'author', 'favorite_recipe_count')
-    list_filter = ('tag__name',)
+    list_filter = ('tags__name',)
     empty_value_display = '--empty--'
 
 

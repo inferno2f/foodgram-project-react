@@ -1,4 +1,5 @@
 from django.contrib.auth import password_validation
+from django.forms import ModelMultipleChoiceField
 from rest_framework import serializers
 
 from api.models import Tag, Recipe, Ingredient, RecipeIngredients
@@ -93,6 +94,7 @@ class GetUserSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Tag
         fields = '__all__'
@@ -105,14 +107,14 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source='ingredient.id')
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement = serializers.ReadOnlyField(source='ingredient.units')
-    amount = serializers.ReadOnlyField()
+    # id = serializers.ReadOnlyField(source='ingredient.id')
+    # name = serializers.ReadOnlyField(source='ingredient.name')
+    # measurement = serializers.ReadOnlyField(source='ingredient.measurement_unit')
+    # amount = serializers.ReadOnlyField()
 
     class Meta:
         model = RecipeIngredients
-        fields = ('id', 'name', 'measurement', 'amount')
+        fields = '__all__'
 
 
 class Base64ImageField(serializers.ImageField):
@@ -154,7 +156,9 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     tags = TagSerializer(many=True, read_only=True)
+    # tag = ModelMultipleChoiceField(Tag.objects.all())
     ingredients = RecipeIngredientsSerializer(many=True, read_only=True)
+    # ingredients = ModelMultipleChoiceField(Ingredient.objects.all())
 
     class Meta:
         model = Recipe
@@ -166,7 +170,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             'description',
             'ingredients',
             'tags',
-            'time',
+            'cooking_time',
             'is_favorited',
             'is_in_shopping_cart'
         )
@@ -196,4 +200,4 @@ class UserSubscribtionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Follow
-        fields = '__all__'
+        fields = ('name',)
