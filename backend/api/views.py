@@ -86,6 +86,7 @@ class UserViewSet(UserViewSet):
     
     @action(detail=False, permission_classes=[permissions.IsAuthenticated])
     def subscriptions(self, request):
+        """ Returns a list of all user subscriptions, includint their recipes """
         user = request.user
         queryset = Follow.objects.filter(user=user)
         pages = self.paginate_queryset(queryset)

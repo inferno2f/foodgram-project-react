@@ -197,12 +197,13 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     """ Shortened serializer to view favorite recipes """
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'time')
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 # FIXME: Этот сериализатор не работает, полностью переделать recipes и распарсить данные автора!
 class UserSubscribtionSerializer(serializers.ModelSerializer):
-    recipes = FavoriteRecipeSerializer(many=True, read_only=True)
+    # recipes = FavoriteRecipeSerializer(many=True, read_only=True)
+    recipes = serializers.SerializerMethodField()
 
     class Meta:
         model = Follow
@@ -216,3 +217,8 @@ class UserSubscribtionSerializer(serializers.ModelSerializer):
             # 'author__is_subscribed',
             'recipes'
          )
+    
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        queryset = Recipe.objects.filter(author=obj.author)
+        return FavoriteRecipeSerializer(queryset, many=True).data
