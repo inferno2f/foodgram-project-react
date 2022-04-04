@@ -28,13 +28,6 @@ from users.models import CustomUser, Follow
 
 class UserViewSet(UserViewSet):
     """Viewset for all user-related opertations. Uses djoser endpoints"""
-    # queryset = CustomUser.objects.all()
-    # permission_classes = (IsUserOrReadOnly,)
-
-    # def get_serializer_class(self):
-    #     if self.request.method == 'POST':
-    #         return CreateUserSerializer
-    #     return GetUserSerializer
 
     @action(methods=('get',),
             detail=False, permission_classes=(IsUserOrReadOnly,))
@@ -108,7 +101,6 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = (IsAuthorOrReadOnly,)
-    # permission_classes = (permissions.AllowAny,)
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_fields = ('tags',)
     ordering = ('-id')

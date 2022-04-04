@@ -1,5 +1,5 @@
 from django.contrib.auth import password_validation
-from django.forms import ModelMultipleChoiceField
+from django.db.models import F
 from rest_framework import serializers
 
 from api.models import Tag, Recipe, Ingredient, RecipeIngredients
@@ -94,27 +94,28 @@ class GetUserSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Tag
         fields = '__all__'
+        read_only_fields = ('__all__',)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = '__all__'
+        read_only_fields = ('__all__',)
 
 
-class RecipeIngredientsSerializer(serializers.ModelSerializer):
-    # id = serializers.ReadOnlyField(source='ingredient.id')
-    # name = serializers.ReadOnlyField(source='ingredient.name')
-    # measurement = serializers.ReadOnlyField(source='ingredient.measurement_unit')
-    # amount = serializers.ReadOnlyField()
+# class RecipeIngredientsSerializer(serializers.ModelSerializer):
+#     id = serializers.ReadOnlyField(source='ingredient.id')
+#     name = serializers.ReadOnlyField(source='ingredient.name')
+#     measurement_unit = serializers.ReadOnlyField(source='ingredient.measurement_unit')
+#     amount = serializers.ReadOnlyField(source='recipeingredient.amount')
 
-    class Meta:
-        model = RecipeIngredients
-        fields = '__all__'
+#     class Meta:
+#         model = RecipeIngredients
+#         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class Base64ImageField(serializers.ImageField):
@@ -156,9 +157,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     tags = TagSerializer(many=True, read_only=True)
-    # tag = ModelMultipleChoiceField(Tag.objects.all())
-    ingredients = RecipeIngredientsSerializer(many=True, read_only=True)
-    # ingredients = ModelMultipleChoiceField(Ingredient.objects.all())
+    ingredients = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -174,6 +173,12 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_favorited',
             'is_in_shopping_cart'
         )
+    
+    def get_ingredients(self, obj):
+        ingredients = obj.ingredients.values(
+            'id', 'name', 'measurement_unit', amount=F('ingredient_amount__amount')
+        )
+        return ingredients
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
@@ -195,9 +200,19 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'time')
 
 
+# FIXME: Этот сериализатор не работает, полностью переделать recipes и распарсить данные автора!
 class UserSubscribtionSerializer(serializers.ModelSerializer):
-    recipes = FavoriteRecipeSerializer(source='recipe_set', many=True)
+    recipes = FavoriteRecipeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Follow
-        fields = ('name',)
+        fields = (
+            'author',
+            # 'user__email',
+            # 'following__id',
+            # 'following__username',
+            # 'following__first_name',
+            # 'following__last_name',
+            # 'author__is_subscribed',
+            'recipes'
+         )
