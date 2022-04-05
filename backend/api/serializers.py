@@ -2,7 +2,7 @@ from django.contrib.auth import password_validation
 from django.db.models import F
 from rest_framework import serializers
 
-from api.models import Tag, Recipe, Ingredient, RecipeIngredients
+from api.models import Tag, Recipe, Ingredient
 from users.models import CustomUser, Follow
 
 
@@ -107,17 +107,6 @@ class IngredientSerializer(serializers.ModelSerializer):
         read_only_fields = ('__all__',)
 
 
-# class RecipeIngredientsSerializer(serializers.ModelSerializer):
-#     id = serializers.ReadOnlyField(source='ingredient.id')
-#     name = serializers.ReadOnlyField(source='ingredient.name')
-#     measurement_unit = serializers.ReadOnlyField(source='ingredient.measurement_unit')
-#     amount = serializers.ReadOnlyField(source='recipeingredient.amount')
-
-#     class Meta:
-#         model = RecipeIngredients
-#         fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
 class Base64ImageField(serializers.ImageField):
 
     def to_internal_value(self, data):
@@ -200,25 +189,32 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-# FIXME: Этот сериализатор не работает, полностью переделать recipes и распарсить данные автора!
+class ShortUserSerilazier(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = (
+            'id',
+            'username',
+            'email',
+        )
+
+
 class UserSubscribtionSerializer(serializers.ModelSerializer):
-    # recipes = FavoriteRecipeSerializer(many=True, read_only=True)
     recipes = serializers.SerializerMethodField()
+    author = serializers.SerializerMethodField()
 
     class Meta:
         model = Follow
         fields = (
             'author',
-            # 'user__email',
-            # 'following__id',
-            # 'following__username',
-            # 'following__first_name',
-            # 'following__last_name',
-            # 'author__is_subscribed',
             'recipes'
          )
+
+    def get_author(self, obj):
+        author = CustomUser.objects.get(id=obj.author_id)
+        return ShortUserSerilazier(author).data
+
     
     def get_recipes(self, obj):
-        request = self.context.get('request')
-        queryset = Recipe.objects.filter(author=obj.author)
-        return FavoriteRecipeSerializer(queryset, many=True).data
+        recipes = Recipe.objects.filter(author=obj.author.id)
+        return FavoriteRecipeSerializer(recipes, many=True).data

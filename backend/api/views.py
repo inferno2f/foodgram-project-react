@@ -20,7 +20,7 @@ from api.models import Ingredient, Recipe, Tag
 from api.paginators import DefaultPaginator
 from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
-                             FavoriteRecipeSerializer, GetUserSerializer,
+                             FavoriteRecipeSerializer,
                              IngredientSerializer, RecipeSerializer,
                              TagSerializer, UserSubscribtionSerializer)
 from users.models import CustomUser, Follow
@@ -57,19 +57,19 @@ class UserViewSet(UserViewSet):
 
     @action(methods=('post', 'delete'),
             detail=True, permission_classes=(IsUserOrReadOnly,))
-    def subscribe(self, request, pk):
-        author = get_object_or_404(CustomUser, id=pk)
+    def subscribe(self, request, *args, **kwargs):
+        author = get_object_or_404(CustomUser, id=kwargs.get('username'))
         user = request.user
         serializer = UserSubscribtionSerializer(data=request.data)
         follow = Follow.objects.filter(user=user, author=author)
 
-        # FIXME: разобраться с сериализаторами - свериться с данными в документации
         if request.method == 'POST':
             serializer = UserSubscribtionSerializer(follow)
             if not follow:
                 serializer = UserSubscribtionSerializer(
                     Follow.objects.create(user=user, author=author))
                 serializer.is_valid(raise_exception=True)
+                serializer.validated_data
                 serializer.save()
             return Response(
                 {'detail': 'subscription created'},
@@ -141,7 +141,7 @@ class RecipeViewSet(ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             detail=False)
     def download_shopping_cart(self, request):
-        """ Download list of all ingredients for recipes in shopping cart """
+        """ Downloads a PDF list of all ingredients for recipes in shopping cart """
         ingredients = CustomUser.objects.filter(id=request.user.id).values(
             'shopping_cart__ingredients__name',
             'shopping_cart__ingredients__units',
