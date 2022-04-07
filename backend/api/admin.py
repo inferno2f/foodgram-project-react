@@ -4,12 +4,12 @@ from api import models
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    def favorite_recipe_count(self, obj):
-        return obj.favorite.count()
-
     list_display = ('name', 'author', 'favorite_recipe_count')
     list_filter = ('tags__name',)
     empty_value_display = '--empty--'
+
+    def favorite_recipe_count(self, obj):
+        return obj.favorite.count()
 
 
 class IngredientAdmin(admin.ModelAdmin):
