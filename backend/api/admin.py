@@ -13,7 +13,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'measurement_unit')
 
 
 class RecipeIngredientAdmin(admin.ModelAdmin):
@@ -23,4 +23,4 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 admin.site.register(models.Recipe, RecipeAdmin)
 admin.site.register(models.Ingredient, IngredientAdmin)
 admin.site.register(models.Tag)
-admin.site.register(models.RecipeIngredients, RecipeIngredientAdmin)
+admin.site.register(models.RecipeIngredient, RecipeIngredientAdmin)

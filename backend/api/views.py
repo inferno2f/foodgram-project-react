@@ -146,7 +146,7 @@ class RecipeViewSet(ModelViewSet):
             'shopping_cart__ingredients__name',
             'shopping_cart__ingredients__units',
         ).exclude(shopping_cart__ingredients__name__isnull=True).annotate(
-            total=Sum('shopping_cart__recipeingredients__amount'),
+            total=Sum('shopping_cart__recipeingredient__amount'),
         ).order_by('shopping_cart__ingredients__name')
 
         # Adding font supporting cyrillic alphabet

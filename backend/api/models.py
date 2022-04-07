@@ -1,3 +1,4 @@
+from dataclasses import fields
 from django.core.validators import MinValueValidator
 from django.db import models
 
@@ -14,14 +15,14 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self) -> str:
-        return f'{self.name} ({self.units})'
+        return f'{self.name} ({self.measurement_unit})'
 
 
 class Tag(models.Model):
     name = models.CharField(max_length=200, unique=True, verbose_name='Тэг')
     color = models.CharField(
         max_length=7, unique=True, verbose_name='HEX-код цвета')
-    slug = models.SlugField(max_length=200, unique=True, blank=False)
+    slug = models.SlugField(max_length=200, unique=True)
 
     class Meta:
         verbose_name = 'Тэг'
@@ -35,16 +36,16 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
         verbose_name='Автор',
-        related_name='recipe')
+        related_name='recipes')
     name = models.CharField(max_length=64, verbose_name='Рецепт')
     image = models.ImageField(verbose_name='Фото')
     description = models.TextField(verbose_name='Описание рецепта')
     ingredients = models.ManyToManyField(
         to=Ingredient,
-        through='api.RecipeIngredients',
+        through='api.RecipeIngredient',
         through_fields=('recipe', 'ingredient'),
         verbose_name='Ингредиенты',
-        related_name='recipe')
+        related_name='recipes')
     tags = models.ManyToManyField(
         'Tag', verbose_name='Тэг', default=None, blank=True)
     cooking_time = models.SmallIntegerField(
@@ -67,7 +68,7 @@ class Recipe(models.Model):
         return f'Рецепт: {self.name} | Автор: {self.author}'
 
 
-class RecipeIngredients(models.Model):
+class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
@@ -75,7 +76,7 @@ class RecipeIngredients(models.Model):
         verbose_name='Ингредиент')
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE, 
+        on_delete=models.CASCADE,
         related_name='ingredient_amount',
         verbose_name='Рецепт')
     amount = models.SmallIntegerField(
@@ -87,6 +88,14 @@ class RecipeIngredients(models.Model):
     class Meta:
         verbose_name = 'Количество ингредиента'
         verbose_name_plural = 'Количество ингредиентов'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ingredient', 'recipe'],
+                name='unique_ingredient_constraint')
+        ]
 
     def __str__(self) -> str:
-        return f'{self.recipe.name}: {self.ingredient.name} - {self.amount} {self.ingredient.units}'
+        return (
+            f'{self.recipe.name}: {self.ingredient.name} - '
+            f'{self.amount} {self.ingredient.units}'
+        )
