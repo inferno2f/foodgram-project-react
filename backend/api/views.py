@@ -14,10 +14,9 @@ from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, ViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.models import Ingredient, Recipe, Tag
-from api.paginators import DefaultPaginator
 from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
                              FavoriteRecipeSerializer,
@@ -170,39 +169,19 @@ class RecipeViewSet(ModelViewSet):
                             filename='Foodgram_cart.pdf')
 
 
-class TagViewSet(ViewSet):
+class TagViewSet(ReadOnlyModelViewSet):
     """
     Provides `GET` and `LIST` methods for all users.
     Tags can only be added and edited via admin panel.
     """
-
-    def list(self, request):
-        queryset = Tag.objects.all()
-        serializer = TagSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, pk=None):
-        queryset = Tag.objects.all()
-        tag = get_object_or_404(queryset, pk=pk)
-        serializer = TagSerializer(tag)
-        return Response(serializer.data)
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
 
 
-class IngredientViewSet(ViewSet):
+class IngredientViewSet(ReadOnlyModelViewSet):
     """
     Provides `GET` and `LIST` methods for all users.
     Ingredients can only be added and edited via admin panel.
     """
-
-    def list(self, request):
-        queryset = Ingredient.objects.all()
-        paginator = DefaultPaginator()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = IngredientSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
-    def retrieve(self, request, pk=None):
-        queryset = Tag.objects.filter(id=pk)
-        # ingredient = get_object_or_404(queryset, pk=pk)
-        serializer = IngredientSerializer(queryset)
-        return Response(serializer.data)
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
