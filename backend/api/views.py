@@ -61,21 +61,20 @@ class UserViewSet(UserViewSet):
         follow = Follow.objects.filter(user=user, author=author)
 
         if request.method == 'POST':
-            serializer = UserSubscribtionSerializer(follow)
-            if not follow:
+            serializer = UserSubscribtionSerializer(data=follow)
+            if not follow.exists():
                 serializer = UserSubscribtionSerializer(
                     Follow.objects.create(user=user, author=author))
-                serializer.is_valid(raise_exception=True)
-                serializer.validated_data
+                serializer.is_valid(raise_exception=True)               
                 serializer.save()
             return Response(
                 {'detail': 'subscription created'},
                 status.HTTP_200_OK)
         elif request.method == 'DELETE':
-            if follow:
+            if follow.exists():
                 Follow.objects.filter(user=user, author=author).delete()
                 return Response(
-                    {'detail': 'success'},
+                    {'detail': 'subscription removed'},
                     status.HTTP_204_NO_CONTENT)
             return Response(
                 {'detail': 'subscription doesn\'t exist'},
