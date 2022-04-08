@@ -33,27 +33,24 @@ class UserViewSet(UserViewSet):
             detail=False, permission_classes=(IsUserOrReadOnly,))
     def me(self, request):
         """ Quick access to user's peronal profile via /me endpoint """
-        user = get_object_or_404(CustomUser, id=request.user.id)
-        serializer = CreateUserSerializer(user, many=False)
+        serializer = CreateUserSerializer(request.user, many=False)
         return Response(serializer.data)
 
     @action(methods=('post',),
             detail=False, permission_classes=(IsUserOrReadOnly,))
     def set_password(self, request):
         """ Provides a way to change a password """
-        user = get_object_or_404(CustomUser, id=request.user.id)
+        user = request.user
         serializer = ChangePasswordSerializer(data=request.data)
 
-        if serializer.is_valid():
-            current_password = serializer.data.get('current_password')
-            if not user.check_password(current_password):
-                return Response({'old_password': ['Wrong password.']},
-                                status=status.HTTP_400_BAD_REQUEST)
-            user.set_password(serializer.data.get('new_password'))
-            user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        current_password = serializer.data.get('current_password')
+        if not user.check_password(current_password):
+            return Response({'old_password': ['Wrong password.']},
+                            status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(serializer.data.get('new_password'))
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=('post', 'delete'),
             detail=True, permission_classes=(IsUserOrReadOnly,))
@@ -144,7 +141,7 @@ class RecipeViewSet(ModelViewSet):
         """ Downloads a PDF list of all ingredients for recipes in shopping cart """
         ingredients = CustomUser.objects.filter(id=request.user.id).values(
             'shopping_cart__ingredients__name',
-            'shopping_cart__ingredients__units',
+            'shopping_cart__ingredients__measurement_unit',
         ).exclude(shopping_cart__ingredients__name__isnull=True).annotate(
             total=Sum('shopping_cart__recipeingredient__amount'),
         ).order_by('shopping_cart__ingredients__name')
