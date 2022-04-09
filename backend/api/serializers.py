@@ -1,4 +1,5 @@
 from django.contrib.auth import password_validation
+from django.db.models import F
 from rest_framework import serializers
 
 from api.fields import Base64ImageField
@@ -107,25 +108,14 @@ class IngredientSerializer(serializers.ModelSerializer):
         read_only_fields = ('__all__',)
 
 
-class IngredientRecipeSerializer(serializers.ModelSerializer):
-    amount = serializers.StringRelatedField(
-        source='ingredient_amount.amount', read_only=True,)
-
-    class Meta:
-        model = Ingredient
-        fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
 # FIXME: Доработать сохранение и редактирование рецепта
-# FIXME: Разобраться с вложенным сериализатором для ингредиентов
 class RecipeSerializer(serializers.ModelSerializer):
     author = GetUserSerializer(read_only=True)
     image = Base64ImageField(max_length=None, use_url=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     tags = TagSerializer(many=True, read_only=True)
-    # ingredients = serializers.SerializerMethodField()
-    ingredients = IngredientRecipeSerializer(read_only=True, many=True)
+    ingredients = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -142,11 +132,11 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart'
         )
 
-    # def get_ingredients(self, obj):
-    #     ingredients = obj.ingredients.values(
-    #         'id', 'name', 'measurement_unit', amount=F('ingredient_amount__amount')
-    #     )
-    #     return ingredients
+    def get_ingredients(self, obj):
+        ingredients = obj.ingredients.values(
+            'id', 'name', 'measurement_unit',
+            amount=F('ingredient_amount__amount'))
+        return ingredients
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
