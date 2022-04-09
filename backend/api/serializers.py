@@ -72,7 +72,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class GetUserSerializer(serializers.ModelSerializer):
-    """ Serializer for a 'GET' method of a UserViewSet """
+    """ Serializer for a 'GET' method of a CustomUserViewSet """
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:

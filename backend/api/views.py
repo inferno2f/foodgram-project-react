@@ -25,9 +25,8 @@ from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
 from users.models import CustomUser, Follow
 
 
-class UserViewSet(UserViewSet):
+class CustomUserViewSet(UserViewSet):
     """Viewset for all user-related opertations. Uses djoser endpoints"""
-
     @action(methods=('get',),
             detail=False, permission_classes=(IsUserOrReadOnly,))
     def me(self, request):
@@ -103,6 +102,14 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+    
+    def add_recipe_to_fav_or_cart(self, recipe, serializer, request):
+        if request.method == 'POST':
+            recipe.add(request.user)
+            return Response(serializer.data, status.HTTP_201_CREATED)
+        elif request.method == 'DELETE':
+            recipe.remove(request.user),
+            return Response(status.HTTP_204_NO_CONTENT)
 
     @action(methods=('post', 'delete'), detail=True,
             permission_classes=(permissions.IsAuthenticated,))
@@ -110,13 +117,8 @@ class RecipeViewSet(ModelViewSet):
         """ Add recipe to favorites """
         recipe = get_object_or_404(Recipe, id=pk)
         serializer = FavoriteRecipeSerializer(recipe)
-
-        if request.method == 'POST':
-            recipe.favorite.add(request.user)
-            return Response(serializer.data, status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            recipe.favorite.remove(request.user),
-            return Response(status.HTTP_204_NO_CONTENT)
+        return self.add_recipe_to_fav_or_cart(
+            recipe.favorite, serializer, request)
 
     @action(methods=('post', 'delete'), detail=True,
             permission_classes=(permissions.IsAuthenticated,))
@@ -124,13 +126,7 @@ class RecipeViewSet(ModelViewSet):
         """ Add recipe to shopping cart """
         recipe = get_object_or_404(Recipe, id=pk)
         serializer = FavoriteRecipeSerializer(recipe)
-
-        if request.method == 'POST':
-            recipe.cart.add(request.user)
-            return Response(serializer.data, status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            recipe.cart.remove(request.user),
-            return Response(status.HTTP_204_NO_CONTENT)
+        return self.add_recipe_to_fav_or_cart(recipe.cart, serializer, request)
 
     @action(methods=('get',),
             permission_classes=(permissions.IsAuthenticated,),

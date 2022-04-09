@@ -18,4 +18,4 @@ class IsAuthorOrReadOnly(IsUserOrReadOnly):
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user.is_superuser or (
-            obj.author.id == request.user.id)
+            obj.author == request.user)
