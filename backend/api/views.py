@@ -63,7 +63,7 @@ class CustomUserViewSet(UserViewSet):
             if not follow.exists():
                 serializer = UserSubscribtionSerializer(
                     Follow.objects.create(user=user, author=author))
-                serializer.is_valid(raise_exception=True)               
+                serializer.is_valid(raise_exception=True)
                 serializer.save()
             return Response(
                 {'detail': 'subscription created'},
@@ -77,10 +77,12 @@ class CustomUserViewSet(UserViewSet):
             return Response(
                 {'detail': 'subscription doesn\'t exist'},
                 status.HTTP_204_NO_CONTENT)
-    
+
     @action(detail=False, permission_classes=[permissions.IsAuthenticated])
     def subscriptions(self, request):
-        """ Returns a list of all user subscriptions, includint their recipes """
+        """ Returns a list of all user subscriptions,
+            including their recipes
+        """
         user = request.user
         queryset = Follow.objects.filter(user=user)
         pages = self.paginate_queryset(queryset)
@@ -102,7 +104,7 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-    
+
     def add_recipe_to_fav_or_cart(self, recipe, serializer, request):
         if request.method == 'POST':
             recipe.add(request.user)
@@ -132,7 +134,7 @@ class RecipeViewSet(ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             detail=False)
     def download_shopping_cart(self, request):
-        """ Downloads a PDF list of all ingredients for recipes in shopping cart """
+        """ Downloads a PDF list of all ingredients for recipes in cart """
         ingredients = CustomUser.objects.filter(id=request.user.id).values(
             'shopping_cart__ingredients__name',
             'shopping_cart__ingredients__measurement_unit',
@@ -167,7 +169,6 @@ class RecipeViewSet(ModelViewSet):
 
 class TagViewSet(ReadOnlyModelViewSet):
     """
-    Provides `GET` and `LIST` methods for all users.
     Tags can only be added and edited via admin panel.
     """
     queryset = Tag.objects.all()
@@ -176,7 +177,6 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 class IngredientViewSet(ReadOnlyModelViewSet):
     """
-    Provides `GET` and `LIST` methods for all users.
     Ingredients can only be added and edited via admin panel.
     """
     queryset = Ingredient.objects.all()

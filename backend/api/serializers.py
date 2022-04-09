@@ -7,9 +7,9 @@ from users.models import CustomUser, Follow
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    """
-    Serializer for CustomUser model.
-    Reuqired fields: ['username', 'email', 'password', 'first_name', 'last_name']
+    """ Serializer for CustomUser model.
+    Reuqired fields:
+        ['username', 'email', 'password', 'first_name', 'last_name']
     """
     first_name = serializers.CharField(max_length=150, required=True)
     last_name = serializers.CharField(max_length=150, required=True)
