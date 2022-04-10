@@ -42,11 +42,11 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
-   'USER_ID_FIELD': 'username',
-   'LOGIN_FIELD': 'email',
-   'SEND_ACTIVATION_EMAIL': False,
-   'HIDE_USERS': False,
-   'SERIALIZERS': {
+    'USER_ID_FIELD': 'username',
+    'LOGIN_FIELD': 'email',
+    'SEND_ACTIVATION_EMAIL': False,
+    'HIDE_USERS': False,
+    'SERIALIZERS': {
         'user_create': 'api.serializers.CreateUserSerializer',
         'user': 'api.serializers.GetUserSerializer',
         'current_user': 'api.serializers.GetUserSerializer',
