@@ -18,7 +18,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.models import Ingredient, Recipe, Tag
 from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
-from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
+from api.serializers import (ChangePasswordSerializer,
                              FavoriteRecipeSerializer,
                              IngredientSerializer, RecipeSerializer,
                              TagSerializer, UserSubscribtionSerializer)
@@ -27,13 +27,6 @@ from users.models import CustomUser, Follow
 
 class CustomUserViewSet(UserViewSet):
     """Viewset for all user-related opertations. Uses djoser endpoints"""
-    @action(methods=('get',),
-            detail=False, permission_classes=(IsUserOrReadOnly,))
-    def me(self, request):
-        """ Quick access to user's peronal profile via /me endpoint """
-        serializer = CreateUserSerializer(request.user, many=False)
-        return Response(serializer.data)
-
     @action(methods=('post',),
             detail=False, permission_classes=(IsUserOrReadOnly,))
     def set_password(self, request):
@@ -101,6 +94,7 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_fields = ('tags',)
     ordering = ('-id')
+    http_method_names = ('get', 'post', 'delete', 'put')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
