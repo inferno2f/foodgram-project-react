@@ -18,10 +18,10 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.models import Ingredient, Recipe, Tag
 from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
-from api.serializers import (ChangePasswordSerializer,
-                             FavoriteRecipeSerializer,
-                             IngredientSerializer, RecipeSerializer,
-                             TagSerializer, UserSubscribtionSerializer)
+from api.serializers import (ChangePasswordSerializer, CreateRecipeSerialzer,
+                             FavoriteRecipeSerializer, GetRecipeSerializer,
+                             IngredientSerializer, TagSerializer,
+                             UserSubscribtionSerializer)
 from users.models import CustomUser, Follow
 
 
@@ -89,12 +89,17 @@ class CustomUserViewSet(UserViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    # serializer_class = GetRecipeSerializer
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_fields = ('tags',)
     ordering = ('-id')
     http_method_names = ('get', 'post', 'delete', 'put')
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST' or self.request.method == 'PUT':
+            return CreateRecipeSerialzer
+        return GetRecipeSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
