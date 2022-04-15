@@ -156,7 +156,6 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
 class CreateRecipeSerialzer(serializers.ModelSerializer):
     """ Serializer for creating a new recipe """
-    # FIXME: разобраться как добавить ингредиенты через postman
     ingredients = AddRecipeIngredientSerializer(many=True)
     image = Base64ImageField(max_length=None, use_url=True)
     tags = serializers.PrimaryKeyRelatedField(
@@ -168,7 +167,28 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
         fields = ('name', 'image', 'description',
                   'ingredients', 'tags', 'cooking_time')
 
-    # TODO: определить методы create() и update()
+    def create(self, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        recipe = Recipe.objects.create(**validated_data)
+        for ingredient in ingredients:
+            RecipeIngredient.objects.create(
+                ingredient=ingredient['id'],
+                recipe=recipe,
+                amount=self.data['ingredients'][0]['amount'])
+        for tag in tags:
+            recipe.tags.add(tag)
+        return recipe
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.image = validated_data.get('image', instance.image)
+        instance.description = validated_data.get(
+            'description', instance.description)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time)
+        instance.save()
+        return instance
 
 
 class ShortUserSerilazier(serializers.ModelSerializer):
@@ -179,7 +199,7 @@ class ShortUserSerilazier(serializers.ModelSerializer):
 
 class UserSubscribtionSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField()
-    author = ShortUserSerilazier(read_only=True, many=False)
+    author = ShortUserSerilazier(read_only=True, many=True)
 
     class Meta:
         model = Follow
