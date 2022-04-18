@@ -167,6 +167,10 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
         fields = ('name', 'image', 'description',
                   'ingredients', 'tags', 'cooking_time')
 
+    def to_representation(self, instance):
+        serializer = GetRecipeSerializer(instance, context=self.context)
+        return serializer.data
+
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
@@ -176,27 +180,27 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
                 ingredient=ingredient['id'],
                 recipe=recipe,
                 amount=ingredient['amount'])
-        for tag in tags:
-            recipe.tags.add(tag.id)
+        recipe.tags.set(tags)
         return recipe
 
     def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.description = validated_data.get(
-            'description', instance.description)
-        ingredients = validated_data.get('ingredients')
+
+        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
+
         RecipeIngredient.objects.filter(recipe=instance).delete()
         for ingredient in ingredients:
             ing_amount = ingredient['amount']
-            ing_id = ingredient['id'].id
+            ing_id = ingredient['id']
+            # print(ing_amount, ing_id)
             RecipeIngredient.objects.create(
                 ingredient=ing_id,
                 recipe=instance,
-                amount=ing_amount,                
+                amount=ing_amount,
             )
         instance.tags.set(tags)
-        return instance
+
+        return super().update(instance, validated_data)
 
 
 class ShortUserSerilazier(serializers.ModelSerializer):

@@ -102,7 +102,7 @@ class RecipeViewSet(ModelViewSet):
         return GetRecipeSerializer
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        return serializer.save(author=self.request.user)
 
     def add_recipe_to_fav_or_cart(self, recipe, serializer, request):
         if request.method == 'POST':
