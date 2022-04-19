@@ -8,8 +8,8 @@ from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
 
 from users.models import CustomUser
 
-from .models import Ingredient, Recipe, Tag
-from .views import RecipeViewSet
+from ..models import Ingredient, Recipe, Tag
+from ..views import RecipeViewSet
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp()
 
