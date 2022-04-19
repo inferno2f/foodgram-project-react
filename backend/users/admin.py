@@ -7,5 +7,6 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('username', 'email')
     empty_value_display = '-empty-'
 
+
 admin.site.register(models.Follow)
 admin.site.register(models.CustomUser, UserAdmin)

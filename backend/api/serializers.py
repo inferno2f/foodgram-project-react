@@ -1,9 +1,9 @@
 from django.contrib.auth import password_validation
 from rest_framework import serializers
+from users.models import CustomUser, Follow
 
 from api.fields import Base64ImageField
 from api.models import Ingredient, Recipe, RecipeIngredient, Tag
-from users.models import CustomUser, Follow
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
