@@ -3,13 +3,13 @@ import tempfile
 from http import HTTPStatus
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from rest_framework.test import (
-    APITestCase, APIRequestFactory, APIClient, force_authenticate)
+from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
+                                 force_authenticate)
 
-from .models import Recipe, Ingredient, Tag
-from .views import RecipeViewSet
 from users.models import CustomUser
 
+from .models import Ingredient, Recipe, Tag
+from .views import RecipeViewSet
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp()
 

@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 
 class CustomUser(AbstractUser):
@@ -38,4 +38,5 @@ class Follow(models.Model):
                 name="unique_subscription")]
 
     def __str__(self) -> str:
-        return f'Пользователь {self.user.username} подписан(а) на {self.author.username}'
+        return (f'Пользователь {self.user.username} подписан(а) '
+                f'на {self.author.username}')
