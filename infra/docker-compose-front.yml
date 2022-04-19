@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # db container
+  # db:
+  #   image: postgres:13.0-alpine
+  #   restart: always
+  #   environment:
+  #     POSTGRES_PASSWORD: corvette
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
+  #   env_file:
+  #     - ../backend/.env
+
+  # # web container
+  # web:
+  #   # image: inferno2f/foodgram:latest
+  #   build:
+  #     context: ..
+  #     dockerfile: Dockerfile
+  #   image: inferno2f/foodgram:latest
+  #   restart: always
+  #   command: >
+  #     bash -c "python manage.py migrate &&
+  #     python manage.py collectstatic --noinput &&
+  #     python manage.py runscript load &&
+  #     gunicorn --bind 0:8000 foodgram.wsgi"
+  #   volumes:
+  #     - static_value:/app/backend/static/
+  #     - media_value:/app/backend/media/
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - ../backend/.env
+  
+  # fronted container
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend/:/app/result_build/
+
+  nginx:
+    image: nginx:1.19.3
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ../frontend/build:/usr/share/nginx/html/
+      - ../docs/:/usr/share/nginx/html/api/docs/
+    # ports:
+    #   - "80:80"
+    # depends_on:
+    #   - web
+    # volumes:
+    #   - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    #   - ./frontend/build:/usr/share/nginx/html/
+    #   - ./docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
+    #   - static_value:/var/html/static/
+    #   - media_value:/var/html/media/

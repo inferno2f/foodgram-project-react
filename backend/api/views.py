@@ -44,7 +44,7 @@ class CustomUserViewSet(UserViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=('post', 'delete'),
-            detail=True, permission_classes=(IsUserOrReadOnly,))
+            detail=True, permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, *args, **kwargs):
         author = get_object_or_404(CustomUser, id=kwargs.get('username'))
         user = request.user
@@ -138,7 +138,7 @@ class RecipeViewSet(ModelViewSet):
             'shopping_cart__ingredients__name',
             'shopping_cart__ingredients__measurement_unit',
         ).exclude(shopping_cart__ingredients__name__isnull=True).annotate(
-            total=Sum('shopping_cart__recipeingredient__amount'),
+            total=Sum('shopping_cart__ingredients__ingredient_amount'),
         ).order_by('shopping_cart__ingredients__name')
 
         # Adding font supporting cyrillic alphabet

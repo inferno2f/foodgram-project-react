@@ -126,7 +126,7 @@ class GetRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'author', 'name', 'image', 'description',
+        fields = ('id', 'author', 'name', 'image', 'text',
                   'ingredients', 'tags', 'cooking_time', 'is_favorited',
                   'is_in_shopping_cart')
 
@@ -164,7 +164,7 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
     """ Serializer for creating a recipe """
     class Meta:
         model = Recipe
-        fields = ('name', 'image', 'description',
+        fields = ('name', 'image', 'text',
                   'ingredients', 'tags', 'cooking_time')
 
     def to_representation(self, instance):

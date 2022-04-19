@@ -5,31 +5,36 @@ services:
   db:
     image: postgres:13.0-alpine
     restart: always
-    environment:
-      POSTGRES_PASSWORD: corvette
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ../backend/.env
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
 
   # web container
   web:
     # image: inferno2f/foodgram:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db
     build:
       context: ..
       dockerfile: Dockerfile
     image: inferno2f/foodgram:latest
     restart: always
-    command: >
-      bash -c "python manage.py migrate &&
-      python manage.py collectstatic --noinput &&
-      python manage.py runscript load &&
-      gunicorn --bind 0:8000 foodgram.wsgi"
+    command: ["sh", "docker-entrypoint.sh"]
     volumes:
       - static_value:/app/backend/static/
       - media_value:/app/backend/media/
-    depends_on:
-      - db
     env_file:
       - ../backend/.env
   
