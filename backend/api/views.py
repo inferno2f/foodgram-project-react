@@ -94,10 +94,10 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_fields = ('tags',)
     ordering = ('-id')
-    http_method_names = ('get', 'post', 'delete', 'put')
+    http_method_names = ('get', 'post', 'delete', 'patch')
 
     def get_serializer_class(self):
-        if self.request.method == 'POST' or self.request.method == 'PUT':
+        if self.request.method == 'POST' or self.request.method == 'PATCH':
             return CreateRecipeSerialzer
         return GetRecipeSerializer
 
