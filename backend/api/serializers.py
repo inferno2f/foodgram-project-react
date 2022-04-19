@@ -192,7 +192,6 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
         for ingredient in ingredients:
             ing_amount = ingredient['amount']
             ing_id = ingredient['id']
-            # print(ing_amount, ing_id)
             RecipeIngredient.objects.create(
                 ingredient=ing_id,
                 recipe=instance,

@@ -89,7 +89,7 @@ class CustomUserViewSet(UserViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    # serializer_class = GetRecipeSerializer
+    serializer_class = GetRecipeSerializer
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_fields = ('tags',)
