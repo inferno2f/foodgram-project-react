@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # db container
+  db:
+    image: postgres:13.0-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+
+  # web container
+  web:
+    image: inferno2f/foodgram:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db
+    restart: always
+    command: ["sh", "docker-entrypoint.sh"]
+    volumes:
+      - static_value:/app/backend/static/
+      - media_value:/app/backend/media/
+  
+  # fronted container
+  frontend:
+    image: inferno2f/foodgram-front:latest
+    volumes:
+      - ../frontend/:/app/result_build/
+
+  nginx:
+    image: nginx:1.19.3
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
+      - static_value:/var/html/static/
+      - media_value:/var/html/media/
+
+volumes:
+  static_value:
+  media_value:
+  postgres_data:
