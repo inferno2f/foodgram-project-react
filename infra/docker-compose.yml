@@ -4,7 +4,8 @@ services:
   # db container
   db:
     image: postgres:13.0-alpine
-    restart: always
+    env_file:
+      - ../.env
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
