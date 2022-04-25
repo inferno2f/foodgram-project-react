@@ -6,5 +6,5 @@ WORKDIR /app
 
 COPY ./ /app
 
-RUN pip3 install -r /app/backend/requirements.txt --no-cache-dir && \
+RUN pip3 install -r /app/requirements.txt --no-cache-dir && \
     chmod +x /app/docker-entrypoint.sh
