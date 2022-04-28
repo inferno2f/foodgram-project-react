@@ -5,9 +5,9 @@ services:
   db:
     image: postgres:13.0-alpine
     env_file:
-      - ../.env
-    environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      - ./.env
+#    environment:
+#      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -31,7 +31,7 @@ services:
       - static_value:/app/backend_static/
       - media_value:/app/backend_media/
     env_file:
-      - ../.env
+      - .env
   
   # fronted container
   frontend:
@@ -39,7 +39,7 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
     volumes:
-      - ./frontend/:/app/result_build/
+      - ../frontend/:/app/result_build/
 
   nginx:
     image: nginx:1.19.3

@@ -26,7 +26,7 @@ from users.models import CustomUser, Follow
 
 
 class CustomUserViewSet(UserViewSet):
-    """Viewset for all user-related opertations. Uses djoser endpoints"""
+    """Viewset for all user-related operations. Uses djoser endpoints"""
     @action(methods=('post',),
             detail=False, permission_classes=(IsUserOrReadOnly,))
     def set_password(self, request):
