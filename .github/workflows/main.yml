@@ -43,7 +43,7 @@ jobs:
         with:
           push: true
           context: backend
-          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -58,7 +58,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
-          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram:latest
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
           sudo docker-compose stop
           sudo docker-compose rm backend
           touch .env
@@ -69,4 +69,4 @@ jobs:
           echo DB_PORT=${{ secrets.DB_PORT }} >> .env
           echo SECRET_KEY="${{ secrets.SECRET_KEY }}" >> .env
           echo DEBUG=${{ secrets.DEBUG }} >> .env
-          sudo docker-compose up -d
+          sudo docker-compose -f infra/docker-compose.yml up -d

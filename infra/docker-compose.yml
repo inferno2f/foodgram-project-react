@@ -19,14 +19,17 @@ services:
 
   # backend container
   backend:
-    image: inferno2f/foodgram:latest
+    image: inferno2f/foodgram-backend:latest
     depends_on:
       db:
         condition: service_healthy
     links:
       - db
     restart: always
-    command: ["sh", "docker-entrypoint.sh"]
+    command:
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runscript load"
     volumes:
       - static_value:/app/backend_static/
       - media_value:/app/backend_media/
@@ -40,6 +43,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
+    depends_on:
+      - backend
 
   nginx:
     image: nginx:1.19.3
