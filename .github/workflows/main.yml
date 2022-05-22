@@ -71,5 +71,6 @@ jobs:
           echo SECRET_KEY="${{ secrets.SECRET_KEY }}" >> .env
           echo DEBUG=${{ secrets.DEBUG }} >> .env
           sudo docker-compose up -d
-          sudo docker-compose exec backend python manage.py migrate
-          sudo docker-compose exec -T backend python manage.py collectstatic --no-input
+          sudo docker exec infra_backend_1 python manage.py collectstatic --no-input
+          sudo docker exec infra_backend_1 python manage.py migrate
+          sudo docker exec infra_backend_1 python manage.py runscript load
