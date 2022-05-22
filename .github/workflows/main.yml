@@ -58,7 +58,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
-          cd /infra/
+          cd /home/inferno_2f/infra/
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
           sudo docker-compose stop
           sudo docker-compose rm backend
