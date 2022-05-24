@@ -14,7 +14,6 @@ services:
       timeout: 2s
       retries: 5
 
-
   # backend container
   backend:
     image: inferno2f/foodgram-backend:latest
@@ -22,13 +21,9 @@ services:
       db:
         condition: service_healthy
     restart: always
-    # command: >
-    #   bash -c "python manage.py migrate &&
-    #   python manage.py collectstatic --noinput &&
-    #   python manage.py runscript load"
     volumes:
-      - static_value:/app/backend_static/
-      - media_value:/app/backend_media/
+      - static_value:/app/backend-static/
+      - media_value:/app/backend-media/
     env_file:
       - .env
   
