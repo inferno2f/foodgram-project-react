@@ -18,12 +18,11 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.filters import IngredientFilter
 from api.models import Ingredient, Recipe, Tag
-from api.permissions import (
-    IsAuthorOrReadOnly, IsUserOrReadOnly)
+from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateRecipeSerialzer,
-                             FavoriteRecipeSerializer, GetRecipeSerializer,
-                             IngredientSerializer, TagSerializer,
-                             FollowSerializer)
+                             FavoriteRecipeSerializer, FollowSerializer,
+                             GetRecipeSerializer, IngredientSerializer,
+                             TagSerializer)
 from users.models import CustomUser, Follow
 
 
