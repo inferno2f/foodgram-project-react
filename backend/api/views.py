@@ -16,12 +16,14 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from api.filters import IngredientFilter
 from api.models import Ingredient, Recipe, Tag
-from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
+from api.permissions import (
+    IsAuthorOrReadOnly, IsUserOrReadOnly)
 from api.serializers import (ChangePasswordSerializer, CreateRecipeSerialzer,
                              FavoriteRecipeSerializer, GetRecipeSerializer,
                              IngredientSerializer, TagSerializer,
-                             UserSubscribtionSerializer)
+                             FollowSerializer)
 from users.models import CustomUser, Follow
 
 
@@ -45,25 +47,24 @@ class CustomUserViewSet(UserViewSet):
 
     @action(methods=('post', 'delete'),
             detail=True, permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, *args, **kwargs):
-        author = get_object_or_404(CustomUser, id=kwargs.get('username'))
-        user = request.user
-        serializer = UserSubscribtionSerializer(data=request.data)
-        follow = Follow.objects.filter(user=user, author=author)
+    def subscribe(self, request, id):
+        user = get_object_or_404(CustomUser, username=request.user.username)
+        author = get_object_or_404(CustomUser, id=id)
+        serializer = FollowSerializer(data=request.data)
+        follow = CustomUser.objects.all().filter(username=author)
 
         if request.method == 'POST':
-            serializer = UserSubscribtionSerializer(data=follow)
             if not follow.exists():
-                serializer = UserSubscribtionSerializer(
+                serializer = FollowSerializer(
                     Follow.objects.create(user=user, author=author))
-                serializer.is_valid(raise_exception=True)
                 serializer.save()
             return Response(
-                {'detail': 'subscription created'},
+                serializer.data,
                 status.HTTP_200_OK)
         elif request.method == 'DELETE':
             if follow.exists():
-                Follow.objects.filter(user=user, author=author).delete()
+                subscription = Follow.objects.filter(user=user, author=author)
+                subscription.delete()
                 return Response(
                     {'detail': 'subscription removed'},
                     status.HTTP_204_NO_CONTENT)
@@ -77,9 +78,9 @@ class CustomUserViewSet(UserViewSet):
             including their recipes
         """
         user = request.user
-        queryset = Follow.objects.filter(user=user)
+        queryset = CustomUser.objects.filter(follower__user=user)
         pages = self.paginate_queryset(queryset)
-        serializer = UserSubscribtionSerializer(
+        serializer = FollowSerializer(
             pages,
             many=True,
             context={'request': request}
@@ -100,6 +101,36 @@ class RecipeViewSet(ModelViewSet):
         if self.request.method == 'POST' or self.request.method == 'PATCH':
             return CreateRecipeSerialzer
         return GetRecipeSerializer
+
+    def get_queryset(self):
+        """ Get all recipes or filter them by property """
+        queryset = self.queryset
+
+        tags = self.request.query_params.get('tags')
+        if tags:
+            queryset = queryset.filter(tags__name__in=tags.split(','))
+
+        author = self.request.query_params.get('author')
+        if author:
+            queryset = queryset.filter(author=author)
+
+        user = self.request.user
+        if user.is_anonymous:
+            return queryset
+
+        is_in_shopping = self.request.query_params.get('is_in_shopping_cart')
+        if is_in_shopping == '1':
+            queryset = queryset.filter(cart=user.id)
+        elif is_in_shopping == '0':
+            queryset = queryset.exclude(cart=user.id)
+
+        is_favorited = self.request.query_params.get('is_favorited')
+        if is_favorited == '1':
+            queryset = queryset.filter(favorite=user.id)
+        if is_favorited == '0':
+            queryset = queryset.exclude(favorite=user.id)
+
+        return queryset
 
     def perform_create(self, serializer):
         return serializer.save(author=self.request.user)
@@ -123,7 +154,7 @@ class RecipeViewSet(ModelViewSet):
 
     @action(methods=('post', 'delete'), detail=True,
             permission_classes=(permissions.IsAuthenticated,))
-    def shopping_cart(self, request, pk=None):
+    def shopping_cart(self, request, pk):
         """ Add recipe to shopping cart """
         recipe = get_object_or_404(Recipe, id=pk)
         serializer = FavoriteRecipeSerializer(recipe)
@@ -171,6 +202,7 @@ class TagViewSet(ReadOnlyModelViewSet):
     Tags can only be added and edited via admin panel.
     """
     queryset = Tag.objects.all()
+    pagination_class = None
     serializer_class = TagSerializer
 
 
@@ -179,4 +211,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     Ingredients can only be added and edited via admin panel.
     """
     queryset = Ingredient.objects.all()
+    pagination_class = None
     serializer_class = IngredientSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter

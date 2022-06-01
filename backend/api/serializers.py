@@ -158,8 +158,7 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
     """ Serializer for creating a new recipe """
     ingredients = AddRecipeIngredientSerializer(many=True)
     image = Base64ImageField(max_length=None, use_url=True)
-    tags = serializers.PrimaryKeyRelatedField(
-        queryset=Tag.objects.all(), many=True)
+    tags = TagSerializer(many=True, read_only=True)
 
     """ Serializer for creating a recipe """
     class Meta:
@@ -176,8 +175,8 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         for ingredient in ingredients:
-            RecipeIngredient.objects.create(
-                ingredient=ingredient['id'],
+            RecipeIngredient.objects.get_or_create(
+                ingredient=ingredient['ingredient'],
                 recipe=recipe,
                 amount=ingredient['amount'])
         recipe.tags.set(tags)
@@ -192,7 +191,7 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
         for ingredient in ingredients:
             ing_amount = ingredient['amount']
             ing_id = ingredient['id']
-            RecipeIngredient.objects.create(
+            RecipeIngredient.objects.get_or_create(
                 ingredient=ing_id,
                 recipe=instance,
                 amount=ing_amount,
@@ -208,14 +207,42 @@ class ShortUserSerilazier(serializers.ModelSerializer):
         fields = ('id', 'username', 'email')
 
 
-class UserSubscribtionSerializer(serializers.ModelSerializer):
-    recipes = serializers.SerializerMethodField()
-    author = ShortUserSerilazier(read_only=True, many=True)
+class FollowSerializer(serializers.ModelSerializer):
+    """ Serializer for subscriptions page """
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    recipes = FavoriteRecipeSerializer(many=True, read_only=True)
+    recipes_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = Follow
-        fields = ('author', 'recipes')
+        model = CustomUser
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count',
+        )
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if not user:
+            return False
+        return Follow.objects.filter(user=user, author=obj).exists()
 
     def get_recipes(self, obj):
-        recipes = Recipe.objects.filter(author=obj.author.id)
-        return FavoriteRecipeSerializer(recipes, many=True).data
+        request = self.context.get('request')
+        limit_recipes = request.query_params.get('recipes_limit')
+        if limit_recipes is not None:
+            recipes = obj.recipes.all()[:(int(limit_recipes))]
+        else:
+            recipes = obj.recipes.all()
+        context = {'request': request}
+        return FavoriteRecipeSerializer(recipes, many=True,
+                                        context=context).data
+
+    @staticmethod
+    def get_recipes_count(obj):
+        return obj.recipes.count()
