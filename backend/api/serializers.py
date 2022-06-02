@@ -158,7 +158,8 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
     """ Serializer for creating a new recipe """
     ingredients = AddRecipeIngredientSerializer(many=True)
     image = Base64ImageField(max_length=None, use_url=True)
-    tags = TagSerializer(many=True, read_only=True)
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
+                                              many=True)
 
     """ Serializer for creating a recipe """
     class Meta:

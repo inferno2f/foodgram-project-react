@@ -23,6 +23,7 @@ from api.serializers import (ChangePasswordSerializer, CreateRecipeSerialzer,
                              FavoriteRecipeSerializer, FollowSerializer,
                              GetRecipeSerializer, IngredientSerializer,
                              TagSerializer)
+from foodgram.pagination import LimitPageNumberPaginator
 from users.models import CustomUser, Follow
 
 
@@ -92,8 +93,9 @@ class RecipeViewSet(ModelViewSet):
     serializer_class = GetRecipeSerializer
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    filterset_fields = ('tags',)
+    filterset_fields = ('tags__slug',)
     ordering = ('-id')
+    pagination_class = LimitPageNumberPaginator
     http_method_names = ('get', 'post', 'delete', 'patch')
 
     def get_serializer_class(self):
@@ -107,7 +109,8 @@ class RecipeViewSet(ModelViewSet):
 
         tags = self.request.query_params.get('tags')
         if tags:
-            queryset = queryset.filter(tags__name__in=tags.split(','))
+            for tag in tags:
+                queryset = queryset.filter(tags__slug__contains=tag)
 
         author = self.request.query_params.get('author')
         if author:
