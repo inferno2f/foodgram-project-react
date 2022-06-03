@@ -177,11 +177,11 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         for ingredient in ingredients:
             RecipeIngredient.objects.get_or_create(
-                ingredient=ingredient['ingredient'],
+                ingredient=ingredient['id'],
                 recipe=recipe,
                 amount=ingredient['amount'])
         recipe.tags.set(tags)
-        return recipe
+        # return redirect('/recipes/{}'.format(recipe.id))
 
     def update(self, instance, validated_data):
 
