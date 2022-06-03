@@ -50,13 +50,14 @@ class CustomUserViewSet(UserViewSet):
     def subscribe(self, request, id):
         user = get_object_or_404(CustomUser, username=request.user.username)
         author = get_object_or_404(CustomUser, id=id)
-        serializer = FollowSerializer(data=request.data)
-        follow = CustomUser.objects.all().filter(username=author)
+        serializer = FollowSerializer()
+        follow = Follow.objects.all().filter(user=user, author=author)
 
         if request.method == 'POST':
             if not follow.exists():
                 serializer = FollowSerializer(
                     Follow.objects.create(user=user, author=author))
+                serializer.is_valid()
                 serializer.save()
             return Response(
                 serializer.data,
@@ -78,7 +79,7 @@ class CustomUserViewSet(UserViewSet):
             including their recipes
         """
         user = request.user
-        queryset = CustomUser.objects.filter(follower__user=user)
+        queryset = CustomUser.objects.filter(following__user=user)
         pages = self.paginate_queryset(queryset)
         serializer = FollowSerializer(
             pages,
@@ -109,8 +110,7 @@ class RecipeViewSet(ModelViewSet):
 
         tags = self.request.query_params.get('tags')
         if tags:
-            for tag in tags:
-                queryset = queryset.filter(tags__slug__contains=tag)
+            queryset = queryset.all().filter(tags__slug__in=tags.split(','))
 
         author = self.request.query_params.get('author')
         if author:
