@@ -108,9 +108,9 @@ class RecipeViewSet(ModelViewSet):
         """ Get all recipes or filter them by property """
         queryset = self.queryset
 
-        tags = self.request.query_params.get('tags')
+        tags = self.request.query_params.getlist('tags')
         if tags:
-            queryset = queryset.all().filter(tags__slug__in=tags.split(','))
+            queryset = queryset.filter(tags__slug__in=tags)
 
         author = self.request.query_params.get('author')
         if author:
