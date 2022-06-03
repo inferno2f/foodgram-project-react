@@ -8,7 +8,7 @@ from foodgram.settings import BASE_DIR
 # Basic scipt to load data to the db
 def run():
     # Specify path to file with fixtures here
-    file = open(os.path.join(BASE_DIR, '..', 'data', 'ingredients.csv'))
+    file = open(os.path.join(BASE_DIR, 'data', 'ingredients.csv'))
     read_file = csv.reader(file)
 
     count = 1
