@@ -73,4 +73,4 @@ jobs:
           sudo docker-compose up -d
           sudo docker exec infra_backend_1 python manage.py collectstatic --no-input
           sudo docker exec infra_backend_1 python manage.py migrate
-          sudo docker exec infra_backend_1 python manage.py runscript load
+        # sudo docker exec infra_backend_1 python manage.py runscript load
