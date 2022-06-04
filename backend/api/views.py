@@ -22,7 +22,7 @@ from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateRecipeSerialzer,
                              FavoriteRecipeSerializer, FollowSerializer,
                              GetOrUpdateRecipeSerializer, IngredientSerializer,
-                             TagSerializer)
+                             SubscribeSerializer, TagSerializer)
 from foodgram.pagination import LimitPageNumberPaginator
 from users.models import CustomUser, Follow
 
@@ -48,24 +48,19 @@ class CustomUserViewSet(UserViewSet):
     @action(methods=('post', 'delete'),
             detail=True, permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, id):
-        user = get_object_or_404(CustomUser, username=request.user.username)
+        user = request.user
         author = get_object_or_404(CustomUser, id=id)
-        serializer = FollowSerializer()
-        follow = Follow.objects.all().filter(user=user, author=author)
 
         if request.method == 'POST':
-            if not follow.exists():
-                serializer = FollowSerializer(
-                    Follow.objects.create(user=user, author=author))
-                serializer.is_valid()
-                serializer.save()
-            return Response(
-                serializer.data,
-                status.HTTP_200_OK)
+            serializer = SubscribeSerializer(
+                data={'user': user.id, 'author': author.pk})
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=user, author=author)
+            return Response(serializer.data, status.HTTP_200_OK)
         elif request.method == 'DELETE':
+            follow = Follow.objects.filter(user=user, author=author)
             if follow.exists():
-                subscription = Follow.objects.filter(user=user, author=author)
-                subscription.delete()
+                follow.delete()
                 return Response(
                     {'detail': 'subscription removed'},
                     status.HTTP_204_NO_CONTENT)

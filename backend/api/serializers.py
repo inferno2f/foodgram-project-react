@@ -1,5 +1,5 @@
 from django.contrib.auth import password_validation
-from rest_framework import serializers
+from rest_framework import serializers, validators
 
 from api.fields import Base64ImageField
 from api.models import Ingredient, Recipe, RecipeIngredient, Tag
@@ -241,3 +241,15 @@ class FollowSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_recipes_count(obj):
         return obj.recipes.count()
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields = ('user', 'author')
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=['user', 'author']
+            )
+        ]
