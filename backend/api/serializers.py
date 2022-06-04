@@ -116,7 +116,7 @@ class AddRecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
 
-class GetRecipeSerializer(serializers.ModelSerializer):
+class GetOrUpdateRecipeSerializer(serializers.ModelSerializer):
     """ Serializer for reading Recipe model """
     author = GetUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -167,38 +167,32 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
         fields = ('name', 'image', 'text',
                   'ingredients', 'tags', 'cooking_time')
 
+    def _add_ingredients(self, recipe, ingredients):
+        for ingredient in ingredients:
+            RecipeIngredient.objects.get_or_create(
+                recipe=recipe,
+                ingredient=ingredient['id'],
+                amount=ingredient['amount'],
+            )
+
     def to_representation(self, instance):
-        serializer = GetRecipeSerializer(instance, context=self.context)
+        serializer = GetOrUpdateRecipeSerializer(
+            instance, context=self.context)
         return serializer.data
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        for ingredient in ingredients:
-            RecipeIngredient.objects.get_or_create(
-                ingredient=ingredient['id'],
-                recipe=recipe,
-                amount=ingredient['amount'])
         recipe.tags.set(tags)
-        # return redirect('/recipes/{}'.format(recipe.id))
+        self._add_ingredients(recipe, ingredients)
 
     def update(self, instance, validated_data):
-
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-
         RecipeIngredient.objects.filter(recipe=instance).delete()
-        for ingredient in ingredients:
-            ing_amount = ingredient['amount']
-            ing_id = ingredient['id']
-            RecipeIngredient.objects.get_or_create(
-                ingredient=ing_id,
-                recipe=instance,
-                amount=ing_amount,
-            )
         instance.tags.set(tags)
-
+        self._add_ingredients(instance, ingredients)
         return super().update(instance, validated_data)
 
 

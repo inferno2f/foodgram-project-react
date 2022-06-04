@@ -21,7 +21,7 @@ from api.models import Ingredient, Recipe, Tag
 from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateRecipeSerialzer,
                              FavoriteRecipeSerializer, FollowSerializer,
-                             GetRecipeSerializer, IngredientSerializer,
+                             GetOrUpdateRecipeSerializer, IngredientSerializer,
                              TagSerializer)
 from foodgram.pagination import LimitPageNumberPaginator
 from users.models import CustomUser, Follow
@@ -91,7 +91,7 @@ class CustomUserViewSet(UserViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = GetRecipeSerializer
+    serializer_class = GetOrUpdateRecipeSerializer
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_fields = ('tags__slug',)
@@ -102,7 +102,7 @@ class RecipeViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == 'POST' or self.request.method == 'PATCH':
             return CreateRecipeSerialzer
-        return GetRecipeSerializer
+        return GetOrUpdateRecipeSerializer
 
     def get_queryset(self):
         """ Get all recipes or filter them by property """
