@@ -35,13 +35,12 @@ class CustomUserViewSet(UserViewSet):
         """ Provides a way to change a password """
         user = request.user
         serializer = ChangePasswordSerializer(data=request.data)
-
         serializer.is_valid(raise_exception=True)
-        current_password = serializer.data.get('current_password')
+        current_password = serializer.validated_data['current_password']
         if not user.check_password(current_password):
-            return Response({'old_password': ['Wrong password.']},
+            return Response({'current_password': 'Wrong password.'},
                             status=status.HTTP_400_BAD_REQUEST)
-        user.set_password(serializer.data.get('new_password'))
+        user.set_password(serializer.validated_data['new_password'])
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
