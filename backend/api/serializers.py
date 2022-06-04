@@ -116,7 +116,7 @@ class AddRecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
 
-class GetOrUpdateRecipeSerializer(serializers.ModelSerializer):
+class GetRecipeSerializer(serializers.ModelSerializer):
     """ Serializer for reading Recipe model """
     author = GetUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -154,7 +154,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class CreateRecipeSerialzer(serializers.ModelSerializer):
+class CreateOrUpdateRecipeSerialzer(serializers.ModelSerializer):
     """ Serializer for creating a new recipe """
     ingredients = AddRecipeIngredientSerializer(many=True)
     image = Base64ImageField(max_length=None, use_url=True)
@@ -176,7 +176,7 @@ class CreateRecipeSerialzer(serializers.ModelSerializer):
             )
 
     def to_representation(self, instance):
-        serializer = GetOrUpdateRecipeSerializer(
+        serializer = GetRecipeSerializer(
             instance, context=self.context)
         return serializer.data
 

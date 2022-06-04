@@ -16,13 +16,13 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from api.filters import IngredientFilter
+from api.filters import IngredientFilter, RecipeFilter
 from api.models import Ingredient, Recipe, Tag
 from api.permissions import IsAuthorOrReadOnly, IsUserOrReadOnly
-from api.serializers import (ChangePasswordSerializer, CreateRecipeSerialzer,
-                             FavoriteRecipeSerializer, FollowSerializer,
-                             GetOrUpdateRecipeSerializer, IngredientSerializer,
-                             SubscribeSerializer, TagSerializer)
+from api.serializers import (
+    ChangePasswordSerializer, CreateOrUpdateRecipeSerialzer,
+    FavoriteRecipeSerializer, FollowSerializer, GetRecipeSerializer,
+    IngredientSerializer, SubscribeSerializer, TagSerializer)
 from foodgram.pagination import LimitPageNumberPaginator
 from users.models import CustomUser, Follow
 
@@ -85,9 +85,9 @@ class CustomUserViewSet(UserViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = GetOrUpdateRecipeSerializer
+    serializer_class = GetRecipeSerializer
     permission_classes = (IsAuthorOrReadOnly,)
-    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_backends = (DjangoFilterBackend, OrderingFilter, RecipeFilter)
     filterset_fields = ('tags__slug',)
     ordering = ('-id')
     pagination_class = LimitPageNumberPaginator
@@ -95,38 +95,8 @@ class RecipeViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.method == 'POST' or self.request.method == 'PATCH':
-            return CreateRecipeSerialzer
-        return GetOrUpdateRecipeSerializer
-
-    def get_queryset(self):
-        """ Get all recipes or filter them by property """
-        queryset = self.queryset
-
-        tags = self.request.query_params.getlist('tags')
-        if tags:
-            queryset = queryset.filter(tags__slug__in=tags).distinct()
-
-        author = self.request.query_params.get('author')
-        if author:
-            queryset = queryset.filter(author=author)
-
-        user = self.request.user
-        if user.is_anonymous:
-            return queryset
-
-        is_in_shopping = self.request.query_params.get('is_in_shopping_cart')
-        if is_in_shopping == '1':
-            queryset = queryset.filter(cart=user.id)
-        elif is_in_shopping == '0':
-            queryset = queryset.exclude(cart=user.id)
-
-        is_favorited = self.request.query_params.get('is_favorited')
-        if is_favorited == '1':
-            queryset = queryset.filter(favorite=user.id)
-        if is_favorited == '0':
-            queryset = queryset.exclude(favorite=user.id)
-
-        return queryset
+            return CreateOrUpdateRecipeSerialzer
+        return GetRecipeSerializer
 
     def perform_create(self, serializer):
         return serializer.save(author=self.request.user)
