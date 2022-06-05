@@ -154,6 +154,8 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
+# Проверка уникальности ингредиентов настроена на уровне моделей
+# Тэги назначаются только уникальные через set(), более подробно в слаке
 class CreateOrUpdateRecipeSerialzer(serializers.ModelSerializer):
     """ Serializer for creating a new recipe """
     ingredients = AddRecipeIngredientSerializer(many=True)
@@ -161,7 +163,6 @@ class CreateOrUpdateRecipeSerialzer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                               many=True)
 
-    """ Serializer for creating a recipe """
     class Meta:
         model = Recipe
         fields = ('name', 'image', 'text',
@@ -186,6 +187,8 @@ class CreateOrUpdateRecipeSerialzer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self._add_ingredients(recipe, ingredients)
+        recipe.save()
+        return recipe
 
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredients')
