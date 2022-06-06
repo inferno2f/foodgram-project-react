@@ -133,9 +133,8 @@ class RecipeViewSet(ModelViewSet):
         """ Downloads a PDF list of all ingredients for recipes in cart """
         ingredients = CustomUser.objects.filter(id=request.user.id).values(
             'shopping_cart__ingredients__name',
-            'shopping_cart__ingredients__measurement_unit',
-        ).exclude(shopping_cart__ingredients__name__isnull=True).annotate(
-            total=Sum('shopping_cart__ingredients__ingredient_amount'),
+            'shopping_cart__ingredients__measurement_unit').annotate(
+            total=Sum('shopping_cart__ingredients__ingredient_amount__amount'),
         ).order_by('shopping_cart__ingredients__name')
 
         # Adding font supporting cyrillic alphabet
