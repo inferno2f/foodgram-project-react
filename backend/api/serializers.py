@@ -154,8 +154,6 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-# Проверка уникальности ингредиентов настроена на уровне моделей
-# Тэги назначаются только уникальные через set(), более подробно в слаке
 class CreateOrUpdateRecipeSerialzer(serializers.ModelSerializer):
     """ Serializer for creating a new recipe """
     ingredients = AddRecipeIngredientSerializer(many=True)
@@ -175,6 +173,27 @@ class CreateOrUpdateRecipeSerialzer(serializers.ModelSerializer):
                 ingredient=ingredient['id'],
                 amount=ingredient['amount'],
             )
+
+    def _check_for_duplicate_tags(self, data):
+        """ Checks if the same tag is added twice """
+        for item in data['tags']:
+            if data['tags'].count(item) > 1:
+                raise serializers.ValidationError(
+                    'You cannot add the same tag twice')
+
+    def _check_for_duplicate_ingredients(self, data):
+        """ Checks if the same ingredient is added twice """
+        ingredients = []
+        for item in data['ingredients']:
+            if item['id'] in ingredients:
+                raise serializers.ValidationError(
+                    'You cannot add the same ingredient twice')
+            ingredients.append(item['id'])
+
+    def validate(self, data):
+        self._check_for_duplicate_ingredients(data)
+        self._check_for_duplicate_tags(data)
+        return data
 
     def to_representation(self, instance):
         serializer = GetRecipeSerializer(
