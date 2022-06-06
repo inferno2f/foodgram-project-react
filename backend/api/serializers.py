@@ -181,17 +181,20 @@ class CreateOrUpdateRecipeSerialzer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'You cannot add the same tag twice')
 
-    def _check_for_duplicate_ingredients(self, data):
-        """ Checks if the same ingredient is added twice """
+    def _check_for_duplicate_or_negative_value_ingredients(self, data):
+        """ Checks if the same ingredient is added twice or if value is < 0 """
         ingredients = []
         for item in data['ingredients']:
             if item['id'] in ingredients:
                 raise serializers.ValidationError(
                     'You cannot add the same ingredient twice')
+            elif item['amount'] < 0:
+                raise serializers.ValidationError(
+                    'You cannot add an ingredient with a negative amount')
             ingredients.append(item['id'])
 
     def validate(self, data):
-        self._check_for_duplicate_ingredients(data)
+        self._check_for_duplicate_or_negative_value_ingredients(data)
         self._check_for_duplicate_tags(data)
         return data
 
